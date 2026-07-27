@@ -39,9 +39,9 @@ export type Lot = {
 }
 
 export const LOTS: Lot[] = [
-  { id: 'LOT-771', make: 'Caterpillar', model: '336DL (×2)', source: 'Ritchie Bros · Meppen', closes: 'Jul 28', estHammer: '€40-44K', predResale: '€66.4K', roi: 58, flag: '🇩🇪', score: 91 },
-  { id: 'LOT-768', make: 'Komatsu', model: 'PC210LC-11', source: 'Van der Berg Plant', closes: 'Jul 25', estHammer: '€31K', predResale: '€43.5K', roi: 40, flag: '🇳🇱', score: 88 },
-  { id: 'LOT-765', make: 'Volvo', model: 'A30G hauler', source: 'Euro Auctions · Leeds', closes: 'Jul 26', estHammer: '€58K', predResale: '€79K', roi: 36, flag: '🇬🇧', score: 82 },
-  { id: 'LOT-760', make: 'Liebherr', model: 'LTM 1070', source: 'Bidadoo · Online (US)', closes: 'Aug 1', estHammer: '€142K', predResale: '€188K', roi: 32, flag: '🇺🇸', score: 79 },
-  { id: 'LOT-758', make: 'Bomag', model: 'BW 213 (×3)', source: 'Boels Rental Returns', closes: 'Jul 29', estHammer: '€26K', predResale: '€44K', roi: 69, flag: '🇧🇪', score: 90 },
+  { id: 'LOT-771', make: 'Caterpillar', model: '336DL (×2)', source: 'Ritchie Bros · Meppen', closes: 'Aug 3', estHammer: '€40-44K', predResale: '€66.4K', roi: 58, flag: '🇩🇪', score: 91 },
+  { id: 'LOT-768', make: 'Komatsu', model: 'PC210LC-11', source: 'Van der Berg Plant', closes: 'Jul 30', estHammer: '€31K', predResale: '€43.5K', roi: 40, flag: '🇳🇱', score: 88 },
+  { id: 'LOT-765', make: 'Volvo', model: 'A30G hauler', source: 'Euro Auctions · Leeds', closes: 'Jul 31', estHammer: '€58K', predResale: '€79K', roi: 36, flag: '🇬🇧', score: 82 },
+  { id: 'LOT-760', make: 'Liebherr', model: 'LTM 1070', source: 'Bidadoo · Online (US)', closes: 'Aug 5', estHammer: '€142K', predResale: '€188K', roi: 32, flag: '🇺🇸', score: 79 },
+  { id: 'LOT-758', make: 'Bomag', model: 'BW 213 (×3)', source: 'Boels Rental Returns', closes: 'Aug 4', estHammer: '€26K', predResale: '€44K', roi: 69, flag: '🇧🇪', score: 90 },
 ]

@@ -33,13 +33,33 @@ export function SectionTitle({
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
         {eyebrow && (
-          <div className="mb-1 text-[10.5px] font-600 uppercase tracking-[0.16em] text-ink-faint">{eyebrow}</div>
+          // Eyebrows are utility labels, so they carry the machine face
+          <div className="mb-1.5 font-mono text-[9.5px] font-500 uppercase tracking-[0.2em] text-ink-faint">{eyebrow}</div>
         )}
-        <h2 className="font-display text-[18px] font-600 leading-tight text-ink">{title}</h2>
+        <h2 className="font-display text-[18px] font-600 leading-tight tracking-[-0.01em] text-ink">{title}</h2>
       </div>
       {right}
     </div>
   )
+}
+
+/**
+ * Stamped identifier plate — the signature device.
+ *
+ * Every object on this desk carries a code: OM-4471 on a machine, SH-8841 on a
+ * shipment, THR-5512 on an inquiry. Setting them as milled plates rather than
+ * faint grey text is what makes the platform read as instrumentation.
+ */
+export function Plate({
+  children,
+  tone = 'default',
+  className,
+}: {
+  children: ReactNode
+  tone?: 'default' | 'live'
+  className?: string
+}) {
+  return <span className={cn('plate', tone === 'live' && 'plate-live', className)}>{children}</span>
 }
 
 type Accent = 'ink' | 'copper' | 'anvil' | 'ok' | 'risk' | 'late' | 'steel'
@@ -67,7 +87,7 @@ export function StatTile({
     steel: 'text-steel-deep',
   }
   const accentBar: Record<Accent, string> = {
-    ink: 'bg-ink/25',
+    ink: 'bg-ink/30',
     copper: 'bg-copper',
     anvil: 'bg-anvil',
     ok: 'bg-ok',
@@ -76,14 +96,18 @@ export function StatTile({
     steel: 'bg-steel',
   }
   return (
-    <Card className="lift relative flex flex-col gap-1.5 overflow-hidden bg-gradient-to-b from-surface to-canvas/40">
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-500 text-ink-faint">{label}</span>
-        {icon && <span className="text-ink-faint/80">{icon}</span>}
+    // Read as a gauge: a marker rule down the left edge — the same device the
+    // sidebar uses for the active screen — then the reading, then its caption.
+    <Card className="lift relative flex flex-col gap-1.5 overflow-hidden bg-gradient-to-b from-surface to-canvas/50 pl-[18px]">
+      <span className={cn('absolute inset-y-0 left-0 w-[3px]', accentBar[accent])} />
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-[9.5px] font-500 uppercase tracking-[0.14em] text-ink-faint">{label}</span>
+        {icon && <span className="shrink-0 text-ink-faint/70">{icon}</span>}
       </div>
-      <div className={cn('font-display text-[27px] font-700 leading-none tabular', accentText[accent])}>{value}</div>
-      {sub && <div className="text-[12px] text-ink-soft">{sub}</div>}
-      <span className={cn('absolute inset-x-0 bottom-0 h-[3px] opacity-80', accentBar[accent])} />
+      <div className={cn('font-display text-[29px] font-700 leading-none tracking-[-0.02em] tabular', accentText[accent])}>
+        {value}
+      </div>
+      {sub && <div className="text-[12px] leading-snug text-ink-soft">{sub}</div>}
     </Card>
   )
 }
@@ -175,12 +199,13 @@ export function ScoreRing({
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEBE5" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E8EA" strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={col} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} />
       </svg>
+      {/* A dial is an instrument, so its reading is set in the machine face */}
       <div className="absolute flex flex-col items-center leading-none">
-        <span className="font-display text-[12.5px] font-700 tabular text-ink">{value}</span>
-        {label && <span className="text-[7.5px] font-600 uppercase tracking-wide text-ink-faint">{label}</span>}
+        <span className="readout text-[12.5px] font-600 text-ink">{value}</span>
+        {label && <span className="font-mono text-[7px] font-500 uppercase tracking-[0.12em] text-ink-faint">{label}</span>}
       </div>
     </div>
   )
@@ -191,7 +216,7 @@ export function ScoreRing({
  * the "deal" being struck; the base is the anvil. Doubles as the Anvil AI glyph.
  */
 export function AnvilMark({ size = 24, tone = 'copper' }: { size?: number; tone?: 'copper' | 'white' | 'ink' | 'anvil' }) {
-  const c = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#1C1F24' : tone === 'anvil' ? '#0E8C8C' : '#B4622E'
+  const c = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#1A1D22' : tone === 'anvil' ? '#0E8C8C' : '#B4622E'
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
       {/* anvil body */}

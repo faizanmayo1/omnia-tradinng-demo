@@ -10,8 +10,12 @@ import {
   MessageSquareText,
   Search,
   CornerDownLeft,
+  Inbox,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from './ui'
+import { useAuth } from './AuthContext'
+import { canAccess } from '../data/team'
 
 type Item = { label: string; sub: string; to: string; icon: typeof Boxes; keywords: string }
 const ITEMS: Item[] = [
@@ -22,23 +26,30 @@ const ITEMS: Item[] = [
   { label: 'Logistics & Shipments', sub: 'RoRo, containers, ETAs', to: '/logistics', icon: Ship, keywords: 'logistics shipping roro container fcl lcl vessel eta port tracking' },
   { label: 'Procurement & Sourcing', sub: 'Auctions, dealers, buy lots', to: '/procurement', icon: Gavel, keywords: 'procurement sourcing auction dealer ritchie euro lots bid buy roi' },
   { label: 'Anvil Copilot', sub: 'Ask across the operation', to: '/copilot', icon: MessageSquareText, keywords: 'ai anvil copilot ask chat brief deal' },
+  { label: 'Inquiry Desk', sub: 'Inbound email, auto-replies & escalations', to: '/inbox', icon: Inbox, keywords: 'inbox inquiry desk email mail campaign auto reply escalation buyer message whatsapp' },
+  { label: 'Access & Audit', sub: 'Roles, permissions & audit trail', to: '/access', icon: ShieldCheck, keywords: 'access audit roles permissions users team staff security log who changed' },
   { label: 'OPP-2207 · PC210 cluster', sub: 'West Africa surge · build deal', to: '/opportunities', icon: Sparkles, keywords: 'opp2207 pc210 komatsu west africa tema apapa hero deal roro' },
   { label: 'OM-4471 · Komatsu PC210LC-8', sub: 'Rotterdam · ready · 91 inspection', to: '/inventory', icon: Boxes, keywords: 'om4471 komatsu pc210 rotterdam excavator hero unit' },
+  { label: 'THR-5496 · Sahel Roads', sub: 'Escalated · 90-day terms requested', to: '/inbox', icon: Inbox, keywords: 'thr5496 sahel roads escalation payment terms bomag roller ghana inquiry' },
   { label: 'SH-8841 · RoRo to Apapa', sub: '2× dozers · on water', to: '/logistics', icon: Ship, keywords: 'sh8841 roro apapa nigeria dozer grande lagos shipment' },
-  { label: 'LOT-771 · Cat 336 ×2', sub: 'Meppen auction · closes Jul 28', to: '/procurement', icon: Gavel, keywords: 'lot771 cat 336 meppen auction ritchie bid procurement' },
+  { label: 'LOT-771 · Cat 336 ×2', sub: 'Meppen auction · closes Aug 3', to: '/procurement', icon: Gavel, keywords: 'lot771 cat 336 meppen auction ritchie bid procurement' },
 ]
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
+  const { role } = useAuth()
   const [q, setQ] = useState('')
   const [idx, setIdx] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const results = useMemo(() => {
+    // Respect the active role: the palette must not offer a destination the
+    // sidebar has locked, or selecting it would just bounce to the dashboard.
+    const allowed = ITEMS.filter((it) => canAccess(role, it.to))
     const s = q.trim().toLowerCase()
-    if (!s) return ITEMS
-    return ITEMS.filter((it) => (it.label + ' ' + it.sub + ' ' + it.keywords).toLowerCase().includes(s))
-  }, [q])
+    if (!s) return allowed
+    return allowed.filter((it) => (it.label + ' ' + it.sub + ' ' + it.keywords).toLowerCase().includes(s))
+  }, [q, role])
 
   useEffect(() => {
     if (open) {

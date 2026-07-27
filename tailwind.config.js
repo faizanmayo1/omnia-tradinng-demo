@@ -1,23 +1,28 @@
 /** @type {import('tailwindcss').Config} */
-// Forged Steel — a premium, warm-industrial identity for Omnia's used-machinery
-// trading desk. Warm off-white canvas, graphite ink, a single molten-copper
-// brand accent (forged metal), and teal as the AI ("Anvil") signal.
+// Forged Steel — an industrial identity for Omnia's used-machinery trading desk.
+//
+// The ground is cool milled steel, not warm paper: that is what makes the copper
+// read as heat coming off a forge rather than as a decorative terracotta. Copper
+// is the brand, teal is the AI ("Anvil") signal, graphite carries structure.
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Warm neutral canvas + pure surfaces
-        canvas: '#F5F3F0',
+        // Cool milled-steel canvas + pure surfaces
+        canvas: '#EEF0F1',
         surface: '#FFFFFF',
         // Ink — graphite, for text + structure
         ink: {
-          DEFAULT: '#1C1F24',
-          soft: '#4B4F57',
-          faint: '#8A8E97',
+          DEFAULT: '#1A1D22',
+          soft: '#474C55',
+          // Tertiary text sits at ~4.2:1 on the canvas rather than the ~3:1 it
+          // had before — the eyebrows are smaller and tracked now, so they
+          // need the contrast back.
+          faint: '#70767F',
         },
-        line: '#E7E3DD',
-        mist: '#EFEBE5',
+        line: '#DDE1E4',
+        mist: '#E5E8EA',
         // Copper — molten forged metal, the brand accent
         copper: {
           DEFAULT: '#B4622E',
@@ -51,21 +56,36 @@ export default {
       fontFamily: {
         display: ['Familjen Grotesk', 'system-ui', 'sans-serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
+        // Third role: instrumentation. IBM Plex Mono was drawn for an
+        // engineering company and reads as a stamped machine plate rather than
+        // as code. Reserved for identifiers and small data readings.
+        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      // The design is authored against a numeric weight scale (font-450 …
+      // font-700). Tailwind ships no numeric fontWeight keys, so every one of
+      // those classes was silently generating nothing and the whole app
+      // rendered at 400 — flat. These keys are what give it its hierarchy.
+      fontWeight: {
+        400: '400',
+        450: '450',
+        500: '500',
+        550: '550',
+        600: '600',
+        700: '700',
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgba(28,31,36,0.04), 0 8px 24px -14px rgba(28,31,36,0.16)',
-        rail: '0 1px 2px 0 rgba(28,31,36,0.04)',
-        pop: '0 16px 48px -16px rgba(28,31,36,0.30)',
-        glow: '0 0 0 1px rgba(14,140,140,0.16), 0 18px 44px -22px rgba(14,140,140,0.40)',
+        card: '0 1px 2px 0 rgba(26,29,34,0.05), 0 10px 28px -18px rgba(26,29,34,0.28)',
+        rail: '0 1px 2px 0 rgba(26,29,34,0.05)',
+        pop: '0 18px 52px -18px rgba(26,29,34,0.34)',
+        plate: 'inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(26,29,34,0.05)',
       },
       borderRadius: {
-        card: '12px',
+        card: '10px',
       },
       keyframes: {
         'pulse-soft': { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.35' } },
         rise: { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         beacon: { '0%,100%': { opacity: '0.35', transform: 'scale(1)' }, '50%': { opacity: '1', transform: 'scale(1.15)' } },
-        dash: { to: { strokeDashoffset: '0' } },
         travel: { '0%': { offsetDistance: '0%', opacity: '0' }, '12%': { opacity: '1' }, '88%': { opacity: '1' }, '100%': { offsetDistance: '100%', opacity: '0' } },
       },
       animation: {

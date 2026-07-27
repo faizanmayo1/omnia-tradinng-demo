@@ -4,6 +4,8 @@ import {
 } from 'lucide-react'
 import { Card, StatTile, Badge, AIBadge, SectionTitle, Meter, MachineGlyph, cn } from '../components/ui'
 import { TradeFlowMap } from '../components/TradeFlowMap'
+import { useAuth } from '../components/AuthContext'
+import { canAccess } from '../data/team'
 import { CLIENT, eurC, eur, num, pctDelta } from '../data/omnia'
 import { INV_STATS, MACHINES, margin, marginPct } from '../data/machines'
 import { OPPORTUNITIES, OPP_STATS, KIND_LABEL, type OppKind } from '../data/opportunities'
@@ -16,6 +18,10 @@ const kindTone: Record<OppKind, 'copper' | 'anvil' | 'risk' | 'steel'> = {
 
 export function CommandCenter() {
   const nav = useNavigate()
+  const { user, role } = useAuth()
+  // In-content links must respect the signed-in role too. A CTA that bounces
+  // straight back reads as a broken app; a hidden one reads as scoped access.
+  const can = (to: string) => canAccess(role, to)
   const hero = OPPORTUNITIES.find((o) => o.hero)!
   const feed = OPPORTUNITIES.filter((o) => !o.hero).slice(0, 3)
   const uplift = INV_STATS.predictedValue - INV_STATS.bookValue
@@ -31,13 +37,25 @@ export function CommandCenter() {
           <span className="h-1 w-1 rounded-full bg-ink-faint/50" />
           <span>{CLIENT.hqCity}</span>
         </div>
-        <h1 className="font-display text-[22px] font-700 tracking-tight text-ink">Good afternoon, {CLIENT.desk.split('.')[1]?.trim() || 'team'} — the desk is running warm.</h1>
+        <h1 className="font-display text-[22px] font-700 tracking-tight text-ink">
+          Good afternoon, {user?.name.split(' ')[0] ?? 'team'} — the desk is running warm.
+        </h1>
+        {/* Month-to-date trading throughput — the flow through the business,
+            distinct from the units currently sitting in yard. */}
+        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-soft">
+          <span><span className="tabular font-700 text-ink">{num(CLIENT.brokeredMtd)}</span> machines brokered this month</span>
+          <span className="h-1 w-1 rounded-full bg-ink-faint/50" />
+          <span><span className="tabular font-700 text-ink">{CLIENT.soldMtd}</span> sold</span>
+          <span className="h-1 w-1 rounded-full bg-ink-faint/50" />
+          <span><span className="tabular font-700 text-ink">{CLIENT.staff}</span> on the desk, {CLIENT.hqCity.split(',')[0]} &amp; {CLIENT.usOffice.split(',')[0]}</span>
+        </div>
       </div>
 
-      {/* Hero opportunity banner */}
+      {/* Hero opportunity banner — only for roles that can open the deal */}
+      {can('/opportunities') && (
       <button
         onClick={() => nav('/opportunities')}
-        className="lift group relative block w-full overflow-hidden rounded-card border border-copper/30 bg-gradient-to-br from-[#2A2E35] to-[#15171C] p-5 text-left shadow-card"
+        className="lift group relative block w-full overflow-hidden rounded-card border border-copper/30 bg-gradient-to-br from-[#2A2F38] to-[#14171D] p-5 text-left shadow-card"
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(560px_240px_at_88%_-30%,rgba(180,98,46,0.30),transparent_70%)]" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center">
@@ -62,11 +80,12 @@ export function CommandCenter() {
           </div>
         </div>
       </button>
+      )}
 
       {/* KPI row */}
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatTile label="Predicted margin (open stock)" value={eurC(uplift)} accent="copper" icon={<TrendingUp className="h-4 w-4" />} sub={<span className="text-ok-deep">{pctDelta((uplift / INV_STATS.bookValue) * 100)} over book</span>} />
-        <StatTile label="Units in stock" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub={`${CLIENT.yards} yards · ${num(CLIENT.liveListings)} listed`} />
+        <StatTile label="Units in yard · active" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub={`${CLIENT.yards} yards · ${num(CLIENT.liveListings)} listed`} />
         <StatTile label="Hot-demand units" value={INV_STATS.hotUnits} accent="anvil" icon={<Flame className="h-4 w-4" />} sub="Matched to surging markets" />
         <StatTile label="Value in transit" value={eurC(SHIP_STATS.valueInTransit)} accent="steel" icon={<Ship className="h-4 w-4" />} sub={`${SHIP_STATS.inTransit} shipments · ${SHIP_STATS.onWater} on water`} />
       </div>
@@ -78,17 +97,25 @@ export function CommandCenter() {
             eyebrow="Anvil intelligence"
             title="Opportunity feed"
             right={
-              <button onClick={() => nav('/opportunities')} className="inline-flex items-center gap-1 text-[12px] font-600 text-anvil-deep hover:text-anvil">
-                View all {OPP_STATS.open} <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+              can('/opportunities') ? (
+                <button onClick={() => nav('/opportunities')} className="inline-flex items-center gap-1 text-[12px] font-600 text-anvil-deep hover:text-anvil">
+                  View all {OPP_STATS.open} <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <span className="text-[11.5px] text-ink-faint">Summary only</span>
+              )
             }
           />
           <div className="space-y-2.5">
             {feed.map((o) => (
               <button
                 key={o.id}
+                disabled={!can('/opportunities')}
                 onClick={() => nav('/opportunities')}
-                className="lift flex w-full items-center gap-3 rounded-xl border border-line bg-gradient-to-b from-surface to-canvas/40 p-3.5 text-left"
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-xl border border-line bg-gradient-to-b from-surface to-canvas/40 p-3.5 text-left',
+                  can('/opportunities') ? 'lift' : 'cursor-default',
+                )}
               >
                 <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', o.marginUplift >= 0 ? 'bg-copper-wash text-copper-deep' : 'bg-risk-tint text-risk-deep')}>
                   <Sparkles className="h-5 w-5" />
@@ -139,7 +166,7 @@ export function CommandCenter() {
           <SectionTitle
             eyebrow="Logistics"
             title="In transit now"
-            right={<button onClick={() => nav('/logistics')} className="inline-flex items-center gap-1 text-[12px] font-600 text-anvil-deep hover:text-anvil">Track all <ChevronRight className="h-3.5 w-3.5" /></button>}
+            right={can('/logistics') ? <button onClick={() => nav('/logistics')} className="inline-flex items-center gap-1 text-[12px] font-600 text-anvil-deep hover:text-anvil">Track all <ChevronRight className="h-3.5 w-3.5" /></button> : <span className="text-[11.5px] text-ink-faint">Summary only</span>}
           />
           <div className="space-y-2">
             {transit.map((s) => (
@@ -167,7 +194,15 @@ export function CommandCenter() {
           <SectionTitle eyebrow="Attention" title="Aging & watch" />
           <div className="space-y-2">
             {MACHINES.filter((m) => m.daysInYard >= 40).sort((a, b) => b.daysInYard - a.daysInYard).slice(0, 4).map((m) => (
-              <button key={m.id} onClick={() => nav('/inventory')} className="lift flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-3 text-left">
+              <button
+                key={m.id}
+                disabled={!can('/inventory')}
+                onClick={() => nav('/inventory')}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-3 text-left',
+                  can('/inventory') ? 'lift' : 'cursor-default',
+                )}
+              >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-risk-tint text-risk-deep"><Clock className="h-4.5 w-4.5" /></div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[12.5px] font-600 text-ink flex items-center gap-1.5"><MachineGlyph category={m.category} size={15} className="text-ink-soft" /> {m.make} {m.model}</div>

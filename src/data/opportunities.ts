@@ -56,12 +56,12 @@ export const OPPORTUNITIES: Opportunity[] = [
     kind: 'procure',
     title: 'Acquire 2× Cat 336 at Ritchie Bros Meppen auction',
     summary:
-      'Two 2014 Cat 336DL excavators listed at the Jul 28 Meppen sale, est. €40-44K each. Kenya & UAE demand supports €66K+ resale. Anvil rates procurement ROI at 58% net of logistics and refurbishment.',
+      'Two 2014 Cat 336DL excavators listed at the Aug 3 Meppen sale, est. €40-44K each. Kenya & UAE demand supports €66K+ resale. Anvil rates procurement ROI at 58% net of logistics and refurbishment.',
     region: 'Source: Meppen, DE → Mombasa / Jebel Ali',
     units: [],
     confidence: 86,
     marginUplift: 38400,
-    window: 'Auction closes Jul 28 · pre-bid by Jul 27',
+    window: 'Auction closes Aug 3 · pre-bid by Aug 1',
     evidence: [
       { label: 'Est. hammer (each)', value: '€40-44K' },
       { label: 'Predicted resale (each)', value: '€66.4K' },
@@ -99,7 +99,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     units: ['OM-4351'],
     confidence: 77,
     marginUplift: 2600,
-    window: 'Before inspection completes (Jul 26)',
+    window: 'Before inspection completes (Jul 31)',
     evidence: [
       { label: 'Current plan', value: 'Dar es Salaam €33.2K' },
       { label: 'Anvil suggestion', value: 'Tema €35.8K' },
