@@ -14,8 +14,8 @@ body,
 
 body {
   margin: 0;
-  background: #f5f3f0;
-  color: #1c1f24;
+  background: #eef0f1;
+  color: #1a1d22;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -28,22 +28,62 @@ body {
 /* Thin, quiet scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d4cec6 transparent;
+  scrollbar-color: #c8ced2 transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #d4cec6;
+  background: #c8ced2;
   border-radius: 8px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #c2bab0;
+  background: #b4bcc1;
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Signature: the stamped plate.
+
+   Every object this business touches carries a stamped identifier — OM-4471
+   on the machine, SH-8841 on the shipment, LOT-771 at the auction, THR-5512
+   on the inquiry. Those codes are how the desk actually refers to its world,
+   so they are set as machine plates rather than as faint grey text: mono,
+   letterspaced, milled into the surface. It is the one device repeated on
+   every screen, and the only place the third typeface is allowed.
+   ───────────────────────────────────────────────────────────────────────── */
+.plate {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  font-weight: 500;
+  font-size: 0.92em;
+  letter-spacing: 0.045em;
+  line-height: 1.35;
+  padding: 0.05em 0.36em;
+  border-radius: 3px;
+  white-space: nowrap;
+  color: #5c6b7a;
+  background: linear-gradient(180deg, #f7f8f9 0%, #e9edef 100%);
+  border: 1px solid rgba(26, 29, 34, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Copper plate — for the identifier of whatever is currently selected */
+.plate-live {
+  color: #8a4519;
+  background: linear-gradient(180deg, #fdf6f0 0%, #f4e3d5 100%);
+  border-color: rgba(180, 98, 46, 0.28);
+}
+
+/* Small mono reading — hour meters, scores, coordinates */
+.readout {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 /* Visible keyboard focus */
@@ -56,31 +96,25 @@ button:focus:not(:focus-visible) {
   outline: none;
 }
 
-.font-450 {
-  font-weight: 450;
-}
-.font-550 {
-  font-weight: 550;
-}
-
-/* Forged wash — warm canvas, faint milled grid + copper/teal glow */
+/* Forged wash — milled steel ground, faint machined grid, copper heat bleeding
+   in from the top-left corner and the Anvil teal answering from bottom-right */
 .forgewash {
-  background-color: #f5f3f0;
+  background-color: #eef0f1;
   background-image:
-    radial-gradient(1100px 560px at 3% -14%, rgba(180, 98, 46, 0.055), transparent 60%),
-    radial-gradient(820px 460px at 112% 116%, rgba(14, 140, 140, 0.05), transparent 58%),
-    linear-gradient(rgba(28, 31, 36, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(28, 31, 36, 0.02) 1px, transparent 1px);
+    radial-gradient(1100px 560px at 3% -14%, rgba(180, 98, 46, 0.07), transparent 60%),
+    radial-gradient(820px 460px at 112% 116%, rgba(14, 140, 140, 0.055), transparent 58%),
+    linear-gradient(rgba(26, 29, 34, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 29, 34, 0.022) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
   background-attachment: local;
 }
 
 /* Primary button, graphite ink */
 .btn-ink {
-  background-image: linear-gradient(135deg, #2a2e35 0%, #1c1f24 100%);
+  background-image: linear-gradient(135deg, #2a2f38 0%, #1a1d22 100%);
 }
 .btn-ink:hover {
-  background-image: linear-gradient(135deg, #1c1f24 0%, #101216 100%);
+  background-image: linear-gradient(135deg, #1a1d22 0%, #0e1116 100%);
 }
 
 /* AI action button, Anvil teal */

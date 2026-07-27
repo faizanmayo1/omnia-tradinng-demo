@@ -12,13 +12,13 @@ export const CLIENT = {
   ai: 'Anvil',
   principal: 'Sam Brown',
   principalTitle: 'Owner & Director',
-  rep: 'Salman',
+  rep: 'Adnan',
   firm: 'CodeUpscale',
   hqCity: 'Billingham, Teesside (UK)',
   usOffice: 'Miami, FL',
   desk: 'H. Osei',
   deskRole: 'Trading Desk Lead',
-  today: 'Thursday, July 23, 2026',
+  today: 'Monday, July 27, 2026',
   now: '15:20',
   tz: 'BST',
   // Real Omnia operating scale (public: exported to 49 countries / 6 continents last year)
@@ -26,6 +26,12 @@ export const CLIENT = {
   continents: 6,
   liveListings: 316,
   yards: 5,
+  // Trading throughput — Omnia brokers roughly 200 machines a month and closes
+  // 20-30 of them. The unit table on Inventory is the active working set, not
+  // the monthly flow, which is why the two figures differ by an order.
+  brokeredMtd: 204,
+  soldMtd: 26,
+  staff: 11,
 }
 
 /** Euros, compact for headline figures: 41200 -> "€41.2K", 1620000 -> "€1.62M". */

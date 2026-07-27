@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Ship, Package, Anchor, AlertTriangle, ArrowRight, CheckCircle2, Circle, MapPin, Globe2 } from 'lucide-react'
-import { Card, StatTile, Badge, AIBadge, Meter, cn } from '../components/ui'
+import { Card, StatTile, Badge, AIBadge, Meter, Plate, cn } from '../components/ui'
 import { useToast } from '../components/Toast'
 import { eur, eurC } from '../data/omnia'
 import { SHIPMENTS, SHIP_STATS, SHIP_STATUS_LABEL, type Shipment } from '../data/shipments'
@@ -17,7 +17,7 @@ export function Logistics() {
   return (
     <div className="mx-auto max-w-[1240px] space-y-5">
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Shipments in transit" value={SHIP_STATS.inTransit} accent="steel" icon={<Ship className="h-4 w-4" />} sub={`${SHIP_STATS.onWater} on water now`} />
+        <StatTile label="Shipments in transit" value={SHIP_STATS.inTransit} accent="steel" icon={<Ship className="h-4 w-4" />} sub={`${SHIP_STATS.onWater} on water · ${SHIP_STATS.booked} booked`} />
         <StatTile label="Value in transit" value={eurC(SHIP_STATS.valueInTransit)} accent="copper" icon={<Globe2 className="h-4 w-4" />} sub="Door-to-door, insured" />
         <StatTile label="ETA at risk" value={SHIP_STATS.atRisk} accent="risk" icon={<AlertTriangle className="h-4 w-4" />} sub="Anvil watching closely" />
         <StatTile label="Export countries YTD" value={SHIP_STATS.countriesYTD} accent="anvil" icon={<Anchor className="h-4 w-4" />} sub="6 continents served" />
@@ -34,7 +34,7 @@ export function Logistics() {
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-steel-tint text-steel-deep"><Icon className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-600 text-ink-faint">{s.id}</span>
+                      <Plate tone={s.id === selId ? "live" : "default"}>{s.id}</Plate>
                       <Badge tone="steel">{s.mode}</Badge>
                       <Badge tone={riskTone[s.etaRisk]}>{riskLabel[s.etaRisk]}</Badge>
                     </div>
@@ -70,7 +70,7 @@ function ShipmentDetail({ shipment: s, onNotify }: { shipment: Shipment; onNotif
     <Card className="h-fit">
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-600 text-ink-faint"><Icon className="h-4 w-4 text-steel-deep" />{s.mode} · {s.id}</div>
+          <div className="flex items-center gap-2 text-[11px] font-600 text-ink-faint"><Icon className="h-4 w-4 text-steel-deep" />{s.mode} <Plate tone="live">{s.id}</Plate></div>
           <h3 className="mt-1 font-display text-[18px] font-700 leading-tight text-ink">{s.machineSummary}</h3>
           <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-soft">
             <MapPin className="h-3.5 w-3.5" /> {s.origin} <ArrowRight className="h-3.5 w-3.5" /> {s.dest} {s.flag}

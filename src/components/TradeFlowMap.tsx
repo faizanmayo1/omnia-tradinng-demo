@@ -45,7 +45,7 @@ export function TradeFlowMap({ highlight, className }: { highlight?: string; cla
     <div className={cn('relative w-full overflow-hidden rounded-xl border border-line bg-gradient-to-b from-[#FBF8F4] to-canvas', className)}>
       <svg viewBox="0 0 100 90" className="block w-full" style={{ height: 'auto' }}>
         {/* faint graticule */}
-        <g stroke="#1C1F24" strokeOpacity="0.05" strokeWidth="0.15">
+        <g stroke="#1A1D22" strokeOpacity="0.05" strokeWidth="0.15">
           {[15, 30, 45, 60, 75].map((y) => (
             <line key={y} x1="0" y1={y} x2="100" y2={y} />
           ))}
@@ -55,7 +55,7 @@ export function TradeFlowMap({ highlight, className }: { highlight?: string; cla
         </g>
 
         {/* stylized continent masses (abstract, for orientation only) */}
-        <g fill="#1C1F24" fillOpacity="0.06">
+        <g fill="#1A1D22" fillOpacity="0.06">
           {/* North America */}
           <ellipse cx="20" cy="46" rx="11" ry="12" />
           <ellipse cx="26" cy="40" rx="7" ry="6" />
@@ -79,7 +79,7 @@ export function TradeFlowMap({ highlight, className }: { highlight?: string; cla
           {arcs.map((a, i) => {
             const d = arcPath(a.sx, a.sy, a.ex, a.ey)
             const emph = highlight ? a.hub === highlight : a.hot
-            const col = emph ? '#B4622E' : '#8A8E97'
+            const col = emph ? '#B4622E' : '#70767F'
             return (
               <g key={i}>
                 <path d={d} stroke={col} strokeOpacity={emph ? 0.9 : 0.4} strokeWidth={emph ? 0.7 : 0.4} strokeLinecap="round" strokeDasharray={emph ? '0' : '1.4 1.4'} />
@@ -93,8 +93,8 @@ export function TradeFlowMap({ highlight, className }: { highlight?: string; cla
         <g>
           {SOURCES.map((s) => (
             <g key={s.hub}>
-              <circle cx={s.x} cy={s.y} r="0.9" fill="#1C1F24" />
-              <circle cx={s.x} cy={s.y} r="1.9" fill="none" stroke="#1C1F24" strokeOpacity="0.25" strokeWidth="0.25" />
+              <circle cx={s.x} cy={s.y} r="0.9" fill="#1A1D22" />
+              <circle cx={s.x} cy={s.y} r="1.9" fill="none" stroke="#1A1D22" strokeOpacity="0.25" strokeWidth="0.25" />
             </g>
           ))}
         </g>

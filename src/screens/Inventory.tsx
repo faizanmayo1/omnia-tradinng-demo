@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react'
-import { Boxes, TrendingUp, Clock, MapPin, Gauge, Calendar, ArrowRight, Search } from 'lucide-react'
-import { Card, StatTile, Badge, AIBadge, ScoreRing, MachineGlyph, Meter, cn } from '../components/ui'
+import { Boxes, TrendingUp, Clock, MapPin, Gauge, Calendar, ArrowRight, Search, Paperclip, History } from 'lucide-react'
+import { Card, StatTile, Badge, AIBadge, ScoreRing, MachineGlyph, Meter, Plate, cn } from '../components/ui'
+import { MachinePack } from '../components/MachinePack'
 import { useToast } from '../components/Toast'
+import { useAuth } from '../components/AuthContext'
 import { eur, eurC, num, pct } from '../data/omnia'
 import {
   MACHINES, CATEGORIES, INV_STATS, STATUS_LABEL, margin, marginPct,
   type Machine, type Category, type Tier, type MStatus,
 } from '../data/machines'
+import { compsFor, SALES_STATS } from '../data/sales'
+import { threadForMachine } from '../data/inbox'
 
 const tierTone: Record<Tier, 'copper' | 'risk' | 'steel'> = { hot: 'copper', warm: 'risk', cool: 'steel' }
 const tierLabel: Record<Tier, string> = { hot: 'Hot demand', warm: 'Warm', cool: 'Cool' }
@@ -16,10 +20,12 @@ const statusTone: Record<MStatus, 'ok' | 'anvil' | 'steel' | 'copper'> = {
 
 export function Inventory() {
   const toast = useToast()
+  const { log } = useAuth()
   const [cat, setCat] = useState<Category | 'All'>('All')
   const [tier, setTier] = useState<Tier | 'All'>('All')
   const [q, setQ] = useState('')
   const [selId, setSelId] = useState(MACHINES[0].id)
+  const [packOpen, setPackOpen] = useState(false)
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -34,7 +40,7 @@ export function Inventory() {
   return (
     <div className="mx-auto max-w-[1240px] space-y-5">
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Units in stock" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub="Across 5 yards" />
+        <StatTile label="Units in yard · active" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub="Working set across 5 yards" />
         <StatTile label="Book value" value={eurC(INV_STATS.bookValue)} accent="steel" icon={<Gauge className="h-4 w-4" />} sub="Total acquisition cost" />
         <StatTile label="Predicted resale value" value={eurC(INV_STATS.predictedValue)} accent="copper" icon={<TrendingUp className="h-4 w-4" />} sub={`+${eurC(INV_STATS.predictedValue - INV_STATS.bookValue)} uplift`} />
         <StatTile label="Aging (40d+)" value={INV_STATS.agingUnits} accent="risk" icon={<Clock className="h-4 w-4" />} sub="Flagged by Anvil for action" />
@@ -94,7 +100,7 @@ export function Inventory() {
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-canvas text-ink-soft"><MachineGlyph category={m.category} size={17} /></div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 font-600 text-ink">{m.make} {m.model} <span className={cn('h-1.5 w-1.5 rounded-full', m.tier === 'hot' ? 'bg-copper' : m.tier === 'warm' ? 'bg-risk' : 'bg-steel')} /></div>
-                          <div className="text-[11px] text-ink-faint">{m.id} · {m.year} · {num(m.hours)} h</div>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-faint"><Plate tone={m.id === selId ? "live" : "default"}>{m.id}</Plate><span className="readout">{m.year} · {num(m.hours)} h</span></div>
                         </div>
                       </div>
                     </td>
@@ -118,19 +124,41 @@ export function Inventory() {
         </Card>
 
         {/* Detail panel */}
-        <MachineDetail machine={sel} onAct={() => toast(`${sel.id} added to a draft deal — Anvil matching buyers`, 'copper')} />
+        <MachineDetail
+          machine={sel}
+          onAct={() => {
+            toast(`${sel.id} added to a draft deal — Anvil matching buyers`, 'copper')
+            log('Added unit to a draft deal', `${sel.id} · ${sel.make} ${sel.model}`)
+          }}
+          onSendPack={() => setPackOpen(true)}
+        />
       </div>
+
+      <MachinePack
+        machine={sel}
+        open={packOpen}
+        onClose={() => setPackOpen(false)}
+        onSent={(msg) => {
+          toast(msg, 'anvil')
+          log('Sent machine pack to buyer', `${sel.id} · spec, 6 photos, landed price`)
+        }}
+        recipient={(() => {
+          const t = threadForMachine(sel.id)
+          return t ? { name: t.from, company: t.company, email: t.email, flag: t.flag, dest: t.country } : undefined
+        })()}
+      />
     </div>
   )
 }
 
-function MachineDetail({ machine: m, onAct }: { machine: Machine; onAct: () => void }) {
+function MachineDetail({ machine: m, onAct, onSendPack }: { machine: Machine; onAct: () => void; onSendPack: () => void }) {
   const mgn = margin(m)
+  const c = compsFor(m)
   return (
     <Card className="sticky top-0 h-fit">
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-600 text-ink-faint"><MachineGlyph category={m.category} size={16} className="text-copper-deep" />{m.category} · {m.id}</div>
+          <div className="flex items-center gap-1.5 text-[11px] font-600 text-ink-faint"><MachineGlyph category={m.category} size={16} className="text-copper-deep" />{m.category} <Plate tone="live">{m.id}</Plate></div>
           <h3 className="mt-1 font-display text-[19px] font-700 leading-tight text-ink">{m.make} {m.model}</h3>
           <div className="mt-0.5 text-[12px] text-ink-soft">{m.vertical}</div>
         </div>
@@ -165,8 +193,44 @@ function MachineDetail({ machine: m, onAct }: { machine: Machine; onAct: () => v
         </div>
       </div>
 
+      {/* Comparable sales from Omnia's own book */}
+      <div className="mt-3 rounded-xl border border-line p-3.5">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-600 uppercase tracking-wide text-ink-faint">
+            <History className="h-3.5 w-3.5" /> Est. value
+          </span>
+          <Badge tone={c.confidence === 'High' ? 'ok' : c.confidence === 'Medium' ? 'anvil' : 'steel'}>
+            {c.confidence} confidence
+          </Badge>
+        </div>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="font-display text-[17px] font-700 tabular text-ink">{eur(c.low)} – {eur(c.high)}</span>
+          <span className="shrink-0 text-[11px] text-ink-faint">
+            {c.comps.length} {c.basis === 'model' ? 'same-model' : 'same-category'} sales
+          </span>
+        </div>
+        <ul className="mt-2 space-y-1">
+          {c.comps.map((s) => (
+            <li key={s.id} className="flex items-center gap-1.5 text-[11.5px]">
+              <span>{s.flag}</span>
+              <span className="truncate text-ink-soft">
+                {s.model} · {s.year} · {num(s.hours)} h → {s.dest.split(',')[0]}
+              </span>
+              <span className="ml-auto shrink-0 tabular font-600 text-ink">{eur(s.price)}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[11px] leading-relaxed text-ink-faint">
+          From your book, not public auctions — {SALES_STATS.closed} closed sales over {SALES_STATS.window}, adjusted for hours
+          and age.
+        </p>
+      </div>
+
       <button onClick={onAct} className="btn-copper mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-600 text-[#fdf4ee] transition hover:brightness-105">
         Add to deal & match buyer <ArrowRight className="h-4 w-4" />
+      </button>
+      <button onClick={onSendPack} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-anvil/40 bg-anvil-wash px-4 py-2.5 text-[13px] font-600 text-anvil-deep transition hover:bg-anvil-tint">
+        <Paperclip className="h-4 w-4" /> Send machine pack — spec &amp; photos
       </button>
     </Card>
   )

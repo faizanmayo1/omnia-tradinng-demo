@@ -3,7 +3,7 @@ import {
   Sparkles, ArrowRight, MapPin, Ship, Clock, CheckCircle2, Loader2, FileText,
   Anchor, UserCheck, PackageCheck, Download, AlertTriangle, ChevronRight,
 } from 'lucide-react'
-import { Card, Badge, AIBadge, Meter, ScoreRing, MachineGlyph, cn } from '../components/ui'
+import { Card, Badge, AIBadge, Meter, ScoreRing, MachineGlyph, Plate, cn } from '../components/ui'
 import { useToast } from '../components/Toast'
 import { eur, eurC } from '../data/omnia'
 import { OPPORTUNITIES, KIND_LABEL, type Opportunity, type OppKind } from '../data/opportunities'
@@ -180,7 +180,7 @@ function OpportunityDetail({ opp, onToast }: { opp: Opportunity; onToast: (m: st
             {units.map((m) => (
               <div key={m.id} className="lift rounded-xl border border-line bg-surface p-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-600 text-ink-faint"><MachineGlyph category={m.category} size={16} className="text-copper-deep" /> {m.id}</span>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-600 text-ink-faint"><MachineGlyph category={m.category} size={16} className="text-copper-deep" /> <Plate>{m.id}</Plate></span>
                   <ScoreRing value={m.inspection} size={38} label="insp" />
                 </div>
                 <div className="mt-1.5 text-[14px] font-700 text-ink">{m.make} {m.model}</div>
@@ -271,7 +271,8 @@ function OpportunityDetail({ opp, onToast }: { opp: Opportunity; onToast: (m: st
             <div className="flex items-center justify-between border-b border-ok/20 px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-ok-deep" />
-                <span className="text-[13px] font-700 text-ink">Deal ticket · OMN-DL-2207</span>
+                <span className="text-[13px] font-700 text-ink">Deal ticket</span>
+                <Plate tone="live">OMN-DL-2207</Plate>
                 <Badge tone="ok" solid>Confirmed</Badge>
               </div>
               <button onClick={() => onToast('Deal ticket exported to PDF', 'ink')} className="inline-flex items-center gap-1 text-[11.5px] font-600 text-ink-soft hover:text-ink">

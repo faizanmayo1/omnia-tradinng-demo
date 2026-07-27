@@ -1,5 +1,5 @@
 import { type ReactNode, useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Sparkles,
@@ -9,11 +9,17 @@ import {
   Gavel,
   MessageSquareText,
   Search,
+  Inbox,
+  ShieldCheck,
+  Lock,
+  LogOut,
 } from 'lucide-react'
 import { cn, AnvilMark } from './ui'
 import { CommandPalette } from './CommandPalette'
+import { useAuth } from './AuthContext'
 import { CLIENT, num } from '../data/omnia'
 import { OPP_STATS } from '../data/opportunities'
+import { ROLES, ROLE_LABEL, canAccess, landingFor } from '../data/team'
 
 const NAV: {
   to: string
@@ -25,17 +31,31 @@ const NAV: {
 }[] = [
   { to: '/', label: 'Trading Command Center', icon: LayoutDashboard, end: true },
   { to: '/opportunities', label: 'Opportunity Engine', icon: Sparkles, hero: true, ai: true },
+  { to: '/inbox', label: 'Inquiry Desk', icon: Inbox, ai: true },
   { to: '/inventory', label: 'Inventory & Machines', icon: Boxes, ai: true },
   { to: '/demand', label: 'Demand Intelligence', icon: Globe2, ai: true },
   { to: '/logistics', label: 'Logistics & Shipments', icon: Ship },
   { to: '/procurement', label: 'Procurement & Sourcing', icon: Gavel, ai: true },
   { to: '/copilot', label: 'Anvil Copilot', icon: MessageSquareText, ai: true },
+  { to: '/access', label: 'Access & Audit', icon: ShieldCheck },
 ]
 
 export function Shell({ children }: { children: ReactNode }) {
   const loc = useLocation()
+  const navigate = useNavigate()
+  const { user, role, signOut } = useAuth()
   const current = NAV.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to)))
   const [paletteOpen, setPaletteOpen] = useState(false)
+
+  // If the signed-in role has no access to the screen currently open, fall back
+  // to the first screen that role can reach. Using landingFor rather than a
+  // hard-coded '/' matters: a pending account cannot reach '/' at all, and
+  // redirecting there would loop.
+  useEffect(() => {
+    if (canAccess(role, loc.pathname)) return
+    const target = landingFor(role)
+    if (target !== loc.pathname) navigate(target, { replace: true })
+  }, [role, loc.pathname, navigate])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -52,7 +72,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="flex h-screen w-full overflow-hidden bg-canvas text-ink">
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       {/* Sidebar, forged-graphite trading rail */}
-      <aside className="relative flex w-[256px] shrink-0 flex-col bg-gradient-to-b from-[#23262C] to-[#131519] text-white/80 shadow-[1px_0_0_rgba(0,0,0,0.06)]">
+      <aside className="relative flex w-[256px] shrink-0 flex-col bg-gradient-to-b from-[#242830] to-[#12151A] text-white/80 shadow-[1px_0_0_rgba(0,0,0,0.06)]">
         {/* faint copper forge glow at top */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(320px_150px_at_22%_-10%,rgba(180,98,46,0.20),transparent_70%)]" />
         <div className="relative flex items-center gap-2.5 px-5 py-4">
@@ -79,6 +99,19 @@ export function Shell({ children }: { children: ReactNode }) {
         <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
           {NAV.map((n) => {
             const Icon = n.icon
+            if (!canAccess(role, n.to)) {
+              return (
+                <div
+                  key={n.to}
+                  title={`Not available to the ${ROLES.find((r) => r.id === role)?.label} role`}
+                  className="group relative flex cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-450 text-white/25"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-white/20" strokeWidth={2} />
+                  <span className="truncate">{n.label}</span>
+                  <Lock className="ml-auto h-3 w-3 shrink-0 text-white/25" />
+                </div>
+              )
+            }
             return (
               <NavLink
                 key={n.to}
@@ -128,11 +161,26 @@ export function Shell({ children }: { children: ReactNode }) {
 
         <div className="relative border-t border-white/10 px-4 py-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-700 text-white">HO</div>
-            <div className="leading-tight">
-              <div className="text-[12px] font-550 text-white">{CLIENT.desk}</div>
-              <div className="text-[10px] text-white/45">{CLIENT.deskRole}</div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-700 text-white">
+              {user?.initials ?? '—'}
             </div>
+            <div className="min-w-0 leading-tight">
+              <div className="truncate text-[12px] font-550 text-white">{user?.name ?? 'Signed out'}</div>
+              <div className="truncate text-[10px] text-white/45">{user?.title ?? ''}</div>
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="ml-auto shrink-0 rounded-md p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="rounded-full bg-copper/20 px-2 py-0.5 text-[10px] font-600 text-copper-soft">
+              {ROLE_LABEL[role]}
+            </span>
+            <span className="truncate text-[10px] text-white/35">{user?.email}</span>
           </div>
         </div>
       </aside>

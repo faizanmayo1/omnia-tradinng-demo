@@ -99,12 +99,30 @@ export const SHIPMENTS: Shipment[] = [
       { label: 'Inland delivery to yard', done: false, date: '' },
     ],
   },
+  {
+    // The "booked" end of the tracking ladder — freight arranged, nothing
+    // collected yet. Repeat order from a buyer already mid-shipment on SH-8829.
+    id: 'SH-8848', mode: 'RoRo', vessel: 'Höegh Copenhagen (awaiting confirmation)', units: 1, machineSummary: 'Volvo EC220DL excavator',
+    origin: 'Miami', dest: 'Callao, Peru', buyer: 'Andes Mining Supply', flag: '🇵🇪',
+    etd: 'Aug 8', eta: 'Aug 27', status: 'booking', progress: 8, etaRisk: 'on-track', value: 61200,
+    legs: [
+      { label: 'Booked & documented', done: true, date: 'Jul 27' },
+      { label: 'Collection from Miami yard', done: false, date: 'Aug 3' },
+      { label: 'Loaded RoRo · Höegh Copenhagen', done: false, date: 'ETA Aug 8' },
+      { label: 'On water · Panama transit', done: false, date: 'ETA Aug 27' },
+      { label: 'Discharge & customs · Callao', done: false, date: '' },
+      { label: 'Inland delivery to yard', done: false, date: '' },
+    ],
+  },
 ]
 
 // KPIs
 export const SHIP_STATS = {
   inTransit: SHIPMENTS.filter((s) => ['on-water', 'at-port', 'inland'].includes(s.status)).length,
-  valueInTransit: SHIPMENTS.reduce((s, x) => s + x.value, 0),
+  // Only count what is genuinely moving — a booked-but-not-collected unit is
+  // not "value in transit", and including it would overstate the figure.
+  valueInTransit: SHIPMENTS.filter((s) => ['on-water', 'at-port', 'inland'].includes(s.status)).reduce((s, x) => s + x.value, 0),
+  booked: SHIPMENTS.filter((s) => s.status === 'booking').length,
   onWater: SHIPMENTS.filter((s) => s.status === 'on-water').length,
   atRisk: SHIPMENTS.filter((s) => s.etaRisk !== 'on-track').length,
   countriesYTD: 49,

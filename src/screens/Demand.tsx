@@ -5,6 +5,7 @@ import { Card, StatTile, Badge, AIBadge, Meter, SectionTitle, cn } from '../comp
 import { useToast } from '../components/Toast'
 import { pctDelta, num } from '../data/omnia'
 import { REGIONS, INQUIRIES, CATEGORY_TREND, type Inquiry } from '../data/demand'
+import { inquiryStatus } from '../data/inbox'
 import { TradeFlowMap } from '../components/TradeFlowMap'
 
 const inqTone: Record<Inquiry['status'], 'anvil' | 'copper' | 'steel' | 'ok'> = {
@@ -77,10 +78,10 @@ export function Demand() {
           <div className="h-[228px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={CATEGORY_TREND} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
-                <CartesianGrid stroke="#E7E3DD" vertical={false} />
-                <XAxis dataKey="m" tick={{ fontSize: 11, fill: '#8A8E97' }} axisLine={{ stroke: '#E7E3DD' }} tickLine={false} />
-                <YAxis domain={[55, 100]} tick={{ fontSize: 11, fill: '#8A8E97' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #E7E3DD', fontSize: 12, boxShadow: '0 8px 24px -14px rgba(28,31,36,0.3)' }} />
+                <CartesianGrid stroke="#DDE1E4" vertical={false} />
+                <XAxis dataKey="m" tick={{ fontSize: 11, fill: '#70767F' }} axisLine={{ stroke: '#DDE1E4' }} tickLine={false} />
+                <YAxis domain={[55, 100]} tick={{ fontSize: 11, fill: '#70767F' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #DDE1E4', fontSize: 12, boxShadow: '0 8px 24px -14px rgba(28,31,36,0.3)' }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="plainline" />
                 <Line type="monotone" dataKey="Excavator" stroke="#B4622E" strokeWidth={2.4} dot={false} />
                 <Line type="monotone" dataKey="Dozer" stroke="#0E8C8C" strokeWidth={2} dot={false} />
@@ -121,7 +122,12 @@ export function Demand() {
                         </div>
                       ) : <span className="text-[11px] text-ink-faint">—</span>}
                     </td>
-                    <td className="px-2"><Badge tone={inqTone[i.status]}>{i.status}</Badge></td>
+                    <td className="px-2">{(() => {
+                      // Derived from the Inquiry Desk so the two screens can
+                      // never show a different state for the same INQ- id.
+                      const s = inquiryStatus(i.id) ?? i.status
+                      return <Badge tone={inqTone[s]}>{s}</Badge>
+                    })()}</td>
                     <td className="py-2.5 pl-2 pr-4 text-right text-[11px] text-ink-faint">{i.received}</td>
                   </tr>
                 ))}

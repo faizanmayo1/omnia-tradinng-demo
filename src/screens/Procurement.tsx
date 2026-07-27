@@ -27,7 +27,7 @@ export function Procurement() {
             <AIBadge label="Anvil buy-score" />
           </div>
           <div className="divide-y divide-line">
-            {LOTS.sort((a, b) => b.score - a.score).map((l) => (
+            {[...LOTS].sort((a, b) => b.score - a.score).map((l) => (
               <div key={l.id} className="flex items-center gap-3 p-3.5 transition hover:bg-canvas/50">
                 <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-b from-copper-wash to-surface">
                   <span className="font-display text-[15px] font-700 leading-none text-copper-deep">{l.score}</span>
@@ -55,7 +55,7 @@ export function Procurement() {
         <Card>
           <SectionTitle eyebrow="Source network" title="Supplier scorecards" />
           <div className="space-y-2.5">
-            {SUPPLIERS.sort((a, b) => b.reliability - a.reliability).map((s) => (
+            {[...SUPPLIERS].sort((a, b) => b.reliability - a.reliability).map((s) => (
               <div key={s.id} className="rounded-xl border border-line bg-gradient-to-b from-surface to-canvas/40 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

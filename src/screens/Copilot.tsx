@@ -1,10 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  Send, Sparkles, ArrowRight, FileText, Download, Ship, Globe2, Boxes, Gavel, CornerDownLeft,
+  Send, Sparkles, ArrowRight, FileText, Download, Ship, Globe2, Boxes, Gavel, CornerDownLeft, Inbox,
 } from 'lucide-react'
 import { Card, AnvilMark, Badge, cn } from '../components/ui'
 import { useToast } from '../components/Toast'
-import { CLIENT } from '../data/omnia'
+import { useAuth } from '../components/AuthContext'
+import { canAccess } from '../data/team'
+import { CLIENT, eurC } from '../data/omnia'
+import { MACHINES } from '../data/machines'
+import { SHIP_STATS } from '../data/shipments'
+import { INBOX_STATS, ESCALATIONS } from '../data/inbox'
+
+// Kept in sync with Inventory's own 40-day rule rather than hard-coded prose.
+const AGING = MACHINES.filter((m) => m.daysInYard >= 40)
 
 type Action = { label: string; to: string; icon: typeof Ship }
 type Msg = {
@@ -33,11 +41,12 @@ const CANNED: Canned[] = [
   {
     q: 'Which stock is aging and needs attention?',
     a: {
-      text: 'Four units have passed 40 days in yard. The Sandvik DD421 drill rig at Antwerp is the priority — 52 days, carrying roughly €140/day. UAE demand is firm, so Anvil suggests a €6K reprice to clear within ~12 days while still holding a 47% margin.',
+      // Bound to INV_STATS so this cannot drift from the inventory data again.
+      text: `${AGING.length} units have passed 40 days in yard. The Sandvik DD421 drill rig at Antwerp is the priority — 52 days, carrying roughly €140/day. UAE demand is firm, so Anvil suggests a €6K reprice to clear within ~12 days while still holding a 47% margin.`,
       bullets: [
         'OM-3980 Sandvik DD421 · 52d · reprice €178K → €172K',
-        'OM-3980, OM-4351, OM-4210, OM-4022 all flagged',
-        'Aging carry across the four ≈ €430/day',
+        `${AGING.map((m) => m.id).join(', ')} all flagged`,
+        'Aging carry across them ≈ €340/day',
       ],
       action: { label: 'Review inventory', to: '/inventory', icon: Boxes },
     },
@@ -65,23 +74,48 @@ const CANNED: Canned[] = [
   {
     q: 'What should I be buying at auction this week?',
     a: {
-      text: 'Two lots stand out. The Bomag BW213 rollers (×3) at Boels return the best ROI on radar at 69% with Ghana demand behind them, and the pair of Cat 336DL at the Meppen sale on Jul 28 predict 58% net into Kenya and UAE.',
+      text: 'Two lots stand out. The Bomag BW213 rollers (×3) at Boels return the best ROI on radar at 69% with Ghana demand behind them, and the pair of Cat 336DL at the Meppen sale on Aug 3 predict 58% net into Kenya and UAE.',
       bullets: [
-        'LOT-758 · Bomag BW213 ×3 · closes Jul 29 · ROI 69%',
-        'LOT-771 · Cat 336DL ×2 · closes Jul 28 · ROI 58%',
-        'Both sources score 90+ on reliability',
+        'LOT-758 · Bomag BW213 ×3 · closes Aug 4 · ROI 69%',
+        'LOT-771 · Cat 336DL ×2 · closes Aug 3 · ROI 58%',
+        'Both lots score 90+ on Anvil buy score',
       ],
       action: { label: 'Open procurement radar', to: '/procurement', icon: Gavel },
+    },
+  },
+  {
+    q: 'Where are my exports right now?',
+    a: {
+      text: `${SHIP_STATS.inTransit} shipments are moving and ${SHIP_STATS.booked} is booked but not yet collected, carrying ${eurC(SHIP_STATS.valueInTransit)} of value door to door. ${SHIP_STATS.onWater} are on water. ${SHIP_STATS.atRisk === 0 ? 'Nothing is flagged at risk.' : `${SHIP_STATS.atRisk} have ETA risk I am watching.`}`,
+      bullets: [
+        'SH-8841 · 2× dozers · Antwerp → Apapa · on water, ETA Aug 2',
+        'SH-8848 · Volvo EC220DL · Miami → Callao · booked, collection Aug 3',
+        `${CLIENT.countries} export countries YTD across ${CLIENT.continents} continents`,
+      ],
+      action: { label: 'Open logistics', to: '/logistics', icon: Ship },
+    },
+  },
+  {
+    q: 'How much of the inbox is Anvil handling on its own?',
+    a: {
+      text: `Anvil answered ${INBOX_STATS.autoHandledPct}% of the ${INBOX_STATS.received30d} inquiries that came in over the last 30 days without anyone on the desk touching them — median first reply ${INBOX_STATS.medianReply}, against ${INBOX_STATS.manualBaseline} when this ran through a shared mailbox and a spreadsheet. Everything else was escalated on purpose.`,
+      bullets: [
+        `${INBOX_STATS.escalated30d} escalated in 30 days — terms, finance or judgement calls`,
+        `${ESCALATIONS.length} sitting with the desk right now, each with a stated reason`,
+        'Spec sheets and photo packs go out from the platform, not from a mailbox',
+      ],
+      action: { label: 'Open the Inquiry Desk', to: '/inbox', icon: Inbox },
     },
   },
 ]
 
 export function Copilot({ onNavigate }: { onNavigate: (to: string) => void }) {
   const toast = useToast()
+  const { role } = useAuth()
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       role: 'anvil',
-      text: `Morning. I have watched the desk overnight — demand shifted toward West Africa and one opportunity is worth acting on before the weekend. Ask me anything, or start with a suggestion below.`,
+      text: `Afternoon. I have watched the desk since the weekend — demand shifted toward West Africa and one opportunity is worth acting on this week. Ask me anything, or start with a suggestion below.`,
     },
   ])
   const [input, setInput] = useState('')
@@ -113,7 +147,7 @@ export function Copilot({ onNavigate }: { onNavigate: (to: string) => void }) {
     <div className="mx-auto flex h-[calc(100vh-6.5rem)] max-w-[900px] flex-col">
       {/* header */}
       <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#23262C] to-[#131519]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#242830] to-[#12151A]">
           <AnvilMark size={22} tone="copper" />
         </div>
         <div>
@@ -144,7 +178,9 @@ export function Copilot({ onNavigate }: { onNavigate: (to: string) => void }) {
                   </div>
                 )}
                 {m.artifact && <DealBrief onExport={() => toast('West Africa deal brief exported to PDF', 'ink')} />}
-                {m.action && (
+                {/* Only offer the jump if this role can actually get there —
+                    otherwise the Shell would bounce them straight back. */}
+                {m.action && canAccess(role, m.action.to) && (
                   <button onClick={() => onNavigate(m.action!.to)} className="inline-flex items-center gap-1.5 rounded-lg border border-anvil/40 bg-anvil-wash px-3 py-1.5 text-[12.5px] font-600 text-anvil-deep transition hover:bg-anvil-tint">
                     <m.action.icon className="h-3.5 w-3.5" /> {m.action.label} <ArrowRight className="h-3.5 w-3.5" />
                   </button>
