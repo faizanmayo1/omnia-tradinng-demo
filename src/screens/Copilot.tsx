@@ -11,8 +11,9 @@ import { MACHINES } from '../data/machines'
 import { SHIP_STATS } from '../data/shipments'
 import { INBOX_STATS, ESCALATIONS } from '../data/inbox'
 
-// Kept in sync with Inventory's own 40-day rule rather than hard-coded prose.
-const AGING = MACHINES.filter((m) => m.daysInYard >= 40)
+// Kept in sync with INV_STATS.agingUnits rather than hard-coded prose. The threshold is
+// 90 days now the book is ~1,800 listings rather than 18 units in a yard.
+const AGING = MACHINES.filter((m) => m.daysListed >= 90)
 
 type Action = { label: string; to: string; icon: typeof Ship }
 type Msg = {
@@ -29,7 +30,7 @@ const CANNED: Canned[] = [
   {
     q: 'What is the best deal I can make today?',
     a: {
-      text: 'The strongest call on the desk is the Komatsu PC210 cluster into West Africa. Ghana and Nigeria demand for 20-22t crawler excavators is up 22% over 30 days, and you hold three PC210LC-8 units in EU yards acquired at €25.9K average against a predicted €41.4K resale.',
+      text: 'The strongest call on the desk is the Powerscreen Chieftain cluster into West Africa. Ghana and Nigeria demand for mobile screening plant is up 22% over 30 days, and you hold three Chieftain 2100X units in EU yards acquired at €67.8K average against a predicted €111K resale — with seven closed Chieftain sales behind that estimate.',
       bullets: [
         '3 units matched: OM-4471, OM-4472, OM-4473 (Rotterdam / Hamburg)',
         'Live buyer INQ-2207 · Adinkra Civil Works · 96% fit',
@@ -66,7 +67,7 @@ const CANNED: Canned[] = [
   {
     q: 'Draft a West Africa deal brief for the desk.',
     a: {
-      text: 'Here is a one-page brief consolidating the PC210 opportunity, the matched buyer, routing and margin. Ready to share with the trading desk.',
+      text: 'Here is a one-page brief consolidating the Chieftain opportunity, the matched buyer, routing and margin. Ready to share with the trading desk.',
       artifact: true,
       action: { label: 'Open in Opportunity Engine', to: '/opportunities', icon: ArrowRight },
     },
@@ -245,7 +246,7 @@ function DealBrief({ onExport }: { onExport: () => void }) {
       <div className="space-y-3 px-4 py-3.5 text-[12.5px]">
         <div>
           <div className="text-[10px] font-600 uppercase tracking-wide text-ink-faint">Opportunity</div>
-          <div className="mt-0.5 font-600 text-ink">3× Komatsu PC210LC-8 → Tema / Apapa, matched to Adinkra Civil Works (INQ-2207).</div>
+          <div className="mt-0.5 font-600 text-ink">3× Powerscreen Chieftain 2100X → Tema / Apapa, matched to Adinkra Civil Works (INQ-2207).</div>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
           {[

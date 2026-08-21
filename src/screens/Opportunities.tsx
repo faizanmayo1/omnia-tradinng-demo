@@ -6,8 +6,8 @@ import {
 import { Card, Badge, AIBadge, Meter, ScoreRing, MachineGlyph, Plate, cn } from '../components/ui'
 import { useToast } from '../components/Toast'
 import { eur, eurC } from '../data/omnia'
-import { OPPORTUNITIES, KIND_LABEL, type Opportunity, type OppKind } from '../data/opportunities'
-import { MACHINES, margin, marginPct } from '../data/machines'
+import { OPPORTUNITIES, KIND_LABEL, UPLIFT_LABEL, type Opportunity, type OppKind } from '../data/opportunities'
+import { MACHINES, margin, marginPct, costValue, costBasisOf } from '../data/machines'
 import { INQUIRIES } from '../data/demand'
 
 const kindTone: Record<OppKind, 'copper' | 'anvil' | 'risk' | 'steel'> = {
@@ -130,7 +130,7 @@ function OpportunityDetail({ opp, onToast }: { opp: Opportunity; onToast: (m: st
             <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">{opp.summary}</p>
           </div>
           <div className="shrink-0 rounded-xl border border-line bg-canvas/60 p-3 text-right">
-            <div className="text-[10.5px] font-600 uppercase tracking-wide text-ink-faint">Margin uplift</div>
+            <div className="text-[10.5px] font-600 uppercase tracking-wide text-ink-faint">{UPLIFT_LABEL[opp.kind]}</div>
             <div className={cn('font-display text-[26px] font-700 leading-none', opp.marginUplift >= 0 ? 'text-copper-deep' : 'text-risk-deep')}>
               {opp.marginUplift >= 0 ? '+' : ''}{eurC(opp.marginUplift)}
             </div>
@@ -184,11 +184,11 @@ function OpportunityDetail({ opp, onToast }: { opp: Opportunity; onToast: (m: st
                   <ScoreRing value={m.inspection} size={38} label="insp" />
                 </div>
                 <div className="mt-1.5 text-[14px] font-700 text-ink">{m.make} {m.model}</div>
-                <div className="text-[11.5px] text-ink-faint">{m.year} · {m.hours.toLocaleString()} h · {m.yard}</div>
+                <div className="text-[11.5px] text-ink-faint">{m.year} · {m.hours.toLocaleString()} h · {m.location.city}</div>
                 <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-line pt-2.5">
                   <div>
-                    <div className="text-[10px] text-ink-faint">Acquired</div>
-                    <div className="text-[13px] font-600 tabular text-ink">{eur(m.acqCost)}</div>
+                    <div className="text-[10px] text-ink-faint">{m.ownership === 'owned' ? 'Acquired' : 'Commission'}</div>
+                    <div className="text-[13px] font-600 tabular text-ink">{costValue(m)}</div>
                   </div>
                   <div>
                     <div className="text-[10px] text-ink-faint">Pred. resale</div>
@@ -282,13 +282,17 @@ function OpportunityDetail({ opp, onToast }: { opp: Opportunity; onToast: (m: st
             <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 px-4 py-3.5 sm:grid-cols-4">
               {[
                 ['Buyer', matchedInq?.buyer ?? 'Adinkra Civil Works'],
-                ['Units', `${units.length} × ${units[0]?.model ?? 'PC210'}`],
+                ['Units', `${units.length} × ${units[0]?.model ?? 'unit'}`],
                 ['Route', 'RoRo Antwerp → Tema'],
                 ['Transit', '19 days · door-to-door'],
                 ['Deal value', eur(units.reduce((s, m) => s + m.predResale, 0))],
-                ['Cost basis', eur(units.reduce((s, m) => s + m.acqCost, 0))],
-                ['Gross margin', `${eurC(opp.marginUplift)} · ${(opp.marginUplift / units.reduce((s, m) => s + m.acqCost, 0) * 100).toFixed(0)}%`],
-                ['Status', 'Buyer notified · negotiating'],
+                ['Cost basis', eur(costBasisOf(units))],
+                // Gross margin is the sum of what each unit actually earns, so this row
+                // reconciles with the unit cards above. `marginUplift` is a different
+                // figure — the gain over selling the same units in Europe at ask — and is
+                // shown on its own line rather than mislabelled as margin.
+                ['Gross margin', `${eurC(units.reduce((s, m) => s + margin(m), 0))} · ${((units.reduce((s, m) => s + margin(m), 0) / Math.max(1, costBasisOf(units))) * 100).toFixed(0)}%`],
+                ['Uplift vs EU sale', `+${eurC(opp.marginUplift)}`],
               ].map(([k, v]) => (
                 <div key={k}>
                   <div className="text-[10px] font-600 uppercase tracking-wide text-ink-faint">{k}</div>

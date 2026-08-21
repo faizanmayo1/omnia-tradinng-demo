@@ -101,7 +101,7 @@ export function MachinePack({
               {m.make} {m.model}
             </h3>
             <div className="mt-0.5 text-[12px] text-ink-faint">
-              {m.id} · {m.year} · {hrs(m.hours)} · {m.yard}
+              {m.id} · {m.year} · {hrs(m.hours)} · {m.location.city}
             </div>
           </div>
           <button onClick={onClose} className="rounded-md p-1 text-ink-faint transition hover:bg-mist hover:text-ink" aria-label="Close">
@@ -162,7 +162,7 @@ export function MachinePack({
                 <Spec k="Hours" v={hrs(m.hours)} />
                 <Spec k="Category" v={m.category} />
                 <Spec k="Application" v={m.vertical} />
-                <Spec k="Location" v={`${m.yard} (${m.yardRegion})`} />
+                <Spec k="Location" v={`${m.location.city} (${m.location.region})`} />
                 <Spec k="Status" v={m.status === 'ready' ? 'Ready to sell' : m.status} />
               </dl>
             </div>
@@ -178,7 +178,7 @@ export function MachinePack({
               <span className="font-display text-[19px] font-700 tabular text-copper-deep">{eur(m.predResale)}</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11.5px] text-ink-soft">
-              <span>Ex-yard {eur(m.listPrice)} · margin {eur(margin(m))}</span>
+              <span>Ex-yard {eur(m.askPrice)} · margin {eur(margin(m))}</span>
               <span className="tabular">Comps {eur(c.low)}–{eur(c.high)}</span>
             </div>
           </div>

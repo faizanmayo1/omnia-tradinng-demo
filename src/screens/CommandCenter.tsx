@@ -8,7 +8,7 @@ import { useAuth } from '../components/AuthContext'
 import { canAccess } from '../data/team'
 import { CLIENT, eurC, eur, num, pctDelta } from '../data/omnia'
 import { INV_STATS, MACHINES, margin, marginPct } from '../data/machines'
-import { OPPORTUNITIES, OPP_STATS, KIND_LABEL, type OppKind } from '../data/opportunities'
+import { OPPORTUNITIES, OPP_STATS, KIND_LABEL, UPLIFT_LABEL, type OppKind } from '../data/opportunities'
 import { SHIPMENTS, SHIP_STATS, SHIP_STATUS_LABEL } from '../data/shipments'
 import { REGIONS } from '../data/demand'
 
@@ -71,7 +71,7 @@ export function CommandCenter() {
           </div>
           <div className="flex shrink-0 items-center gap-5 md:flex-col md:items-end md:gap-2">
             <div className="text-right">
-              <div className="text-[10.5px] font-600 uppercase tracking-wide text-white/50">Margin uplift</div>
+              <div className="text-[10.5px] font-600 uppercase tracking-wide text-white/50">{UPLIFT_LABEL[hero.kind]}</div>
               <div className="font-display text-[30px] font-700 leading-none text-copper-soft">{eurC(hero.marginUplift)}</div>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-copper px-3.5 py-2 text-[13px] font-600 text-[#fdf4ee] transition group-hover:brightness-110">
@@ -85,7 +85,7 @@ export function CommandCenter() {
       {/* KPI row */}
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatTile label="Predicted margin (open stock)" value={eurC(uplift)} accent="copper" icon={<TrendingUp className="h-4 w-4" />} sub={<span className="text-ok-deep">{pctDelta((uplift / INV_STATS.bookValue) * 100)} over book</span>} />
-        <StatTile label="Units in yard · active" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub={`${CLIENT.yards} yards · ${num(CLIENT.liveListings)} listed`} />
+        <StatTile label="Machines available" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub={`${num(INV_STATS.ownedUnits)} Omnia stock · ${num(INV_STATS.brokeredUnits)} listed for vendors`} />
         <StatTile label="Hot-demand units" value={INV_STATS.hotUnits} accent="anvil" icon={<Flame className="h-4 w-4" />} sub="Matched to surging markets" />
         <StatTile label="Value in transit" value={eurC(SHIP_STATS.valueInTransit)} accent="steel" icon={<Ship className="h-4 w-4" />} sub={`${SHIP_STATS.inTransit} shipments · ${SHIP_STATS.onWater} on water`} />
       </div>
@@ -193,7 +193,7 @@ export function CommandCenter() {
         <Card>
           <SectionTitle eyebrow="Attention" title="Aging & watch" />
           <div className="space-y-2">
-            {MACHINES.filter((m) => m.daysInYard >= 40).sort((a, b) => b.daysInYard - a.daysInYard).slice(0, 4).map((m) => (
+            {MACHINES.filter((m) => m.daysListed >= 90).sort((a, b) => b.daysListed - a.daysListed).slice(0, 4).map((m) => (
               <button
                 key={m.id}
                 disabled={!can('/inventory')}
@@ -206,9 +206,9 @@ export function CommandCenter() {
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-risk-tint text-risk-deep"><Clock className="h-4.5 w-4.5" /></div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[12.5px] font-600 text-ink flex items-center gap-1.5"><MachineGlyph category={m.category} size={15} className="text-ink-soft" /> {m.make} {m.model}</div>
-                  <div className="flex items-center gap-1 text-[11px] text-ink-faint"><MapPin className="h-3 w-3" />{m.yard} · margin {eur(margin(m))} ({marginPct(m).toFixed(0)}%)</div>
+                  <div className="flex items-center gap-1 text-[11px] text-ink-faint"><MapPin className="h-3 w-3" />{m.location.city} · margin {eur(margin(m))} ({marginPct(m).toFixed(0)}%)</div>
                 </div>
-                <Badge tone="risk">{m.daysInYard}d</Badge>
+                <Badge tone="risk">{m.daysListed}d</Badge>
               </button>
             ))}
           </div>

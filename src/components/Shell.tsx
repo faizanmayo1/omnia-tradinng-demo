@@ -18,6 +18,7 @@ import { cn, AnvilMark } from './ui'
 import { CommandPalette } from './CommandPalette'
 import { useAuth } from './AuthContext'
 import { CLIENT, num } from '../data/omnia'
+import { INV_STATS } from '../data/machines'
 import { OPP_STATS } from '../data/opportunities'
 import { ROLES, ROLE_LABEL, canAccess, landingFor } from '../data/team'
 
@@ -198,7 +199,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-3 rounded-full border border-line bg-canvas px-3 py-1.5 md:flex">
               <span className="inline-flex items-center gap-1.5 text-[11.5px] text-ink-soft">W. Africa demand <span className="font-600 text-copper-deep">▲ +20%</span></span>
               <span className="h-3 w-px bg-line" />
-              <span className="inline-flex items-center gap-1.5 text-[11.5px] text-ink-soft">Stock <span className="tabular font-600 text-ink">{num(CLIENT.liveListings)}</span></span>
+              <span className="inline-flex items-center gap-1.5 text-[11.5px] text-ink-soft">Available <span className="tabular font-600 text-ink">{num(INV_STATS.units)}</span></span>
             </div>
           </div>
         </header>

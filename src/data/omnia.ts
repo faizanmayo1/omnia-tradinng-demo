@@ -24,8 +24,12 @@ export const CLIENT = {
   // Real Omnia operating scale (public: exported to 49 countries / 6 continents last year)
   countries: 49,
   continents: 6,
-  liveListings: 316,
-  yards: 5,
+  // Machines available through Omnia at any time. Sam's own figure on reviewing the first
+  // demo: "1000-2000 pieces of equipment we have available in scattered locations across
+  // Europe / North America". INV_STATS derives the live count from the book itself; this
+  // constant is only for copy that needs a round number.
+  liveListings: 1847,
+  yards: 4,
   // Trading throughput — Omnia brokers roughly 200 machines a month and closes
   // 20-30 of them. The unit table on Inventory is the active working set, not
   // the monthly flow, which is why the two figures differ by an order.
