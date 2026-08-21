@@ -35,7 +35,7 @@ export const SHIP_STATUS_LABEL: Record<ShipStatus, string> = {
 
 export const SHIPMENTS: Shipment[] = [
   {
-    id: 'SH-8841', mode: 'RoRo', vessel: 'Grande Lagos', units: 2, machineSummary: '2× Komatsu D65 / Cat D6R dozers',
+    id: 'SH-8841', mode: 'RoRo', vessel: 'Grande Lagos', units: 2, machineSummary: '2× Wirtgen W 200 cold planers',
     origin: 'Antwerp', dest: 'Apapa, Nigeria', buyer: 'Lekki Infrastructure Ltd', flag: '🇳🇬',
     etd: 'Jul 14', eta: 'Aug 2', status: 'on-water', progress: 58, etaRisk: 'on-track', value: 186700,
     legs: [
@@ -48,7 +48,7 @@ export const SHIPMENTS: Shipment[] = [
     ],
   },
   {
-    id: 'SH-8836', mode: 'FCL', vessel: 'MSC Nairobi', units: 1, machineSummary: 'Komatsu WA380-6 wheel loader',
+    id: 'SH-8836', mode: 'FCL', vessel: 'MSC Nairobi', units: 1, machineSummary: 'Hamm HD+ 120i VV roller',
     origin: 'Hamburg', dest: 'Mombasa, Kenya', buyer: 'Rift Valley Aggregates', flag: '🇰🇪',
     etd: 'Jul 10', eta: 'Aug 6', status: 'on-water', progress: 44, etaRisk: 'watch', value: 69800,
     legs: [

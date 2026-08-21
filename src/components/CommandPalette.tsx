@@ -20,7 +20,7 @@ import { canAccess } from '../data/team'
 type Item = { label: string; sub: string; to: string; icon: typeof Boxes; keywords: string }
 const ITEMS: Item[] = [
   { label: 'Trading Command Center', sub: 'Live desk, stock health & alerts', to: '/', icon: LayoutDashboard, keywords: 'home command center overview desk margin stock' },
-  { label: 'Opportunity Engine', sub: 'PC210 → West Africa surge', to: '/opportunities', icon: Sparkles, keywords: 'opportunity anvil resale match hero komatsu pc210 ghana nigeria procure' },
+  { label: 'Opportunity Engine', sub: 'Chieftain → West Africa surge', to: '/opportunities', icon: Sparkles, keywords: 'opportunity anvil resale match hero powerscreen chieftain screener ghana nigeria procure' },
   { label: 'Inventory & Machines', sub: 'Stock, inspection, predicted resale', to: '/inventory', icon: Boxes, keywords: 'inventory stock machines excavator crane dozer inspection resale margin yard' },
   { label: 'Demand Intelligence', sub: 'Regional demand & buyer inquiries', to: '/demand', icon: Globe2, keywords: 'demand buyers inquiries region tema apapa jebel ali india map trade flow' },
   { label: 'Logistics & Shipments', sub: 'RoRo, containers, ETAs', to: '/logistics', icon: Ship, keywords: 'logistics shipping roro container fcl lcl vessel eta port tracking' },
@@ -28,8 +28,8 @@ const ITEMS: Item[] = [
   { label: 'Anvil Copilot', sub: 'Ask across the operation', to: '/copilot', icon: MessageSquareText, keywords: 'ai anvil copilot ask chat brief deal' },
   { label: 'Inquiry Desk', sub: 'Inbound email, auto-replies & escalations', to: '/inbox', icon: Inbox, keywords: 'inbox inquiry desk email mail campaign auto reply escalation buyer message whatsapp' },
   { label: 'Access & Audit', sub: 'Roles, permissions & audit trail', to: '/access', icon: ShieldCheck, keywords: 'access audit roles permissions users team staff security log who changed' },
-  { label: 'OPP-2207 · PC210 cluster', sub: 'West Africa surge · build deal', to: '/opportunities', icon: Sparkles, keywords: 'opp2207 pc210 komatsu west africa tema apapa hero deal roro' },
-  { label: 'OM-4471 · Komatsu PC210LC-8', sub: 'Rotterdam · ready · 91 inspection', to: '/inventory', icon: Boxes, keywords: 'om4471 komatsu pc210 rotterdam excavator hero unit' },
+  { label: 'OPP-2207 · Chieftain cluster', sub: 'West Africa surge · build deal', to: '/opportunities', icon: Sparkles, keywords: 'opp2207 chieftain powerscreen screener west africa tema apapa hero deal roro' },
+  { label: 'OM-4471 · Powerscreen Chieftain 2100X', sub: 'Rotterdam · ready · 91 inspection', to: '/inventory', icon: Boxes, keywords: 'om4471 powerscreen chieftain 2100x rotterdam screener hero unit' },
   { label: 'THR-5496 · Sahel Roads', sub: 'Escalated · 90-day terms requested', to: '/inbox', icon: Inbox, keywords: 'thr5496 sahel roads escalation payment terms bomag roller ghana inquiry' },
   { label: 'SH-8841 · RoRo to Apapa', sub: '2× dozers · on water', to: '/logistics', icon: Ship, keywords: 'sh8841 roro apapa nigeria dozer grande lagos shipment' },
   { label: 'LOT-771 · Cat 336 ×2', sub: 'Meppen auction · closes Aug 3', to: '/procurement', icon: Gavel, keywords: 'lot771 cat 336 meppen auction ritchie bid procurement' },

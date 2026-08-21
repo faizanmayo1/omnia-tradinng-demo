@@ -234,18 +234,54 @@ export function MachineGlyph({ category, size = 18, className }: { category: str
   const s = { width: size, height: size } as const
   const stroke = 'currentColor'
   switch (category) {
+    // --- Lifting ---
     case 'Crane':
+    case 'Mobile Crane':
+    case 'Crawler Crane':
+    case 'Tower Crane':
       return (
         <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
           <path d="M4 21h6M6 21V8l11 2M6 8l2-3M17 10V6M15 6h5" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
-    case 'Dozer':
+
+    // --- Aggregate: a hopper feeding an inclined screen deck onto a stockpile ---
+    case 'Screener':
       return (
         <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
-          <path d="M3 16h11v-4H6l-2 4ZM3 19h13M3 16v3M4 12V9m10 2 3 1v4M20 11v8M17 19h4" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M3 6h8l-2 4H5L3 6ZM6 10v3M8 13h11M8 13l-3 6M19 13l2 6M4 19h18M10 15h7M12 17h5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
+    // --- Aggregate: jaw box with feed hopper and discharge conveyor ---
+    case 'Crusher':
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
+          <path d="M4 5h9l-2 4H6L4 5ZM6 9h6v5H6zM12 12l7-3M19 9v4M4 18h16M7 14v4M17 13v5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    // --- Aggregate: a stacking conveyor ---
+    case 'Conveyor':
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
+          <path d="M3 17l14-8M3 17h4M17 9h3M5 20a2 2 0 1 0 0 .01M15 20a2 2 0 1 0 0 .01M5 20h10M8 15l2-1M11 13l2-1" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+
+    // --- Road: paver laying a mat behind a hopper ---
+    case 'Asphalt Paver':
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
+          <path d="M4 9h8l2 3h5v4H4V9ZM3 19h18M6 16v3M17 16v3M8 9V6h3v3" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    // --- Road: cold planer with a cutting drum ---
+    case 'Cold Planer':
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>
+          <path d="M5 8h11v6H5V8ZM16 10h3v4M4 18h17M7 14v4M18 14v4M9 14v-2M12 14v-2M8 8V5h4" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+
     case 'Wheel Loader':
       return (
         <svg {...s} viewBox="0 0 24 24" fill="none" className={className}>

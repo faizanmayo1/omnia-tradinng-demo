@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
-import { Boxes, TrendingUp, Clock, MapPin, Gauge, Calendar, ArrowRight, Search, Paperclip, History } from 'lucide-react'
+import { useState, useMemo, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { Boxes, Clock, MapPin, Gauge, Calendar, ArrowRight, Search, Paperclip, History, Handshake, Warehouse } from 'lucide-react'
 import { Card, StatTile, Badge, AIBadge, ScoreRing, MachineGlyph, Meter, Plate, cn } from '../components/ui'
 import { MachinePack } from '../components/MachinePack'
 import { useToast } from '../components/Toast'
@@ -7,7 +8,8 @@ import { useAuth } from '../components/AuthContext'
 import { eur, eurC, num, pct } from '../data/omnia'
 import {
   MACHINES, CATEGORIES, INV_STATS, STATUS_LABEL, margin, marginPct,
-  type Machine, type Category, type Tier, type MStatus,
+  costLabel, costValue, earnLabel, OWNERSHIP_LABEL,
+  type Machine, type Category, type Tier, type MStatus, type Ownership,
 } from '../data/machines'
 import { compsFor, SALES_STATS } from '../data/sales'
 import { threadForMachine } from '../data/inbox'
@@ -18,32 +20,85 @@ const statusTone: Record<MStatus, 'ok' | 'anvil' | 'steel' | 'copper'> = {
   ready: 'ok', inspection: 'anvil', reserved: 'copper', 'in-transit': 'steel',
 }
 
+type SortKey = 'margin' | 'price' | 'age' | 'hours' | 'inspection'
+const SORTS: { id: SortKey; label: string; cmp: (a: Machine, b: Machine) => number }[] = [
+  { id: 'age', label: 'Days listed', cmp: (a, b) => b.daysListed - a.daysListed },
+  { id: 'margin', label: 'Return to Omnia', cmp: (a, b) => margin(b) - margin(a) },
+  { id: 'price', label: 'Price', cmp: (a, b) => b.askPrice - a.askPrice },
+  { id: 'hours', label: 'Hours', cmp: (a, b) => a.hours - b.hours },
+  { id: 'inspection', label: 'Inspection', cmp: (a, b) => b.inspection - a.inspection },
+]
+
+/**
+ * Saved views. At 18 machines a filter bar was enough; at ~1,800 the useful unit of work is
+ * a question the desk asks repeatedly — stale brokered stock, fresh listings worth a
+ * campaign, high-value lifting gear.
+ */
+const VIEWS: { label: string; apply: (m: Machine) => boolean }[] = [
+  { label: 'Aging brokered stock 90d+', apply: (m) => m.ownership === 'brokered' && m.daysListed >= 90 },
+  { label: 'New this week', apply: (m) => m.daysListed <= 7 },
+  { label: 'Omnia stock, ready to sell', apply: (m) => m.ownership === 'owned' && m.status === 'ready' },
+  { label: 'Hot demand, low hours', apply: (m) => m.tier === 'hot' && m.hours < 6000 },
+]
+
+const ROW_HEIGHT = 53
+
 export function Inventory() {
   const toast = useToast()
   const { log } = useAuth()
   const [cat, setCat] = useState<Category | 'All'>('All')
   const [tier, setTier] = useState<Tier | 'All'>('All')
+  const [own, setOwn] = useState<Ownership | 'All'>('All')
+  const [country, setCountry] = useState<string>('All')
+  const [sort, setSort] = useState<SortKey>('age')
+  const [view, setView] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [selId, setSelId] = useState(MACHINES[0].id)
   const [packOpen, setPackOpen] = useState(false)
 
+  const countries = useMemo(
+    () => [...new Set(MACHINES.map((m) => m.location.country))].sort(),
+    [],
+  )
+
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase()
-    return MACHINES.filter((m) => (cat === 'All' || m.category === cat))
-      .filter((m) => (tier === 'All' || m.tier === tier))
-      .filter((m) => !s || (`${m.make} ${m.model} ${m.id} ${m.yard} ${m.predRegion}`.toLowerCase().includes(s)))
-      .sort((a, b) => marginPct(b) - marginPct(a))
-  }, [cat, tier, q])
+    const savedView = VIEWS.find((v) => v.label === view)
+    const cmp = SORTS.find((x) => x.id === sort)!.cmp
+    return MACHINES
+      .filter((m) => cat === 'All' || m.category === cat)
+      .filter((m) => tier === 'All' || m.tier === tier)
+      .filter((m) => own === 'All' || m.ownership === own)
+      .filter((m) => country === 'All' || m.location.country === country)
+      .filter((m) => !savedView || savedView.apply(m))
+      .filter((m) => !s || `${m.make} ${m.model} ${m.id} ${m.location.city} ${m.vendor ?? ''} ${m.predRegion}`.toLowerCase().includes(s))
+      .sort(cmp)
+  }, [cat, tier, own, country, view, sort, q])
 
-  const sel = MACHINES.find((m) => m.id === selId)!
+  // ~1,800 rows cannot all be in the DOM. Virtualizing keeps filtering instant, which is
+  // the whole point: the objection was that this looks like a tool for a yard of 100.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const virt = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 12,
+  })
+
+  const sel = MACHINES.find((m) => m.id === selId) ?? MACHINES[0]
+
+  const resetFilters = () => {
+    setCat('All'); setTier('All'); setOwn('All'); setCountry('All'); setView(null); setQ('')
+  }
+  const filtered = rows.length !== MACHINES.length
 
   return (
     <div className="mx-auto max-w-[1240px] space-y-5">
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Units in yard · active" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub="Working set across 5 yards" />
-        <StatTile label="Book value" value={eurC(INV_STATS.bookValue)} accent="steel" icon={<Gauge className="h-4 w-4" />} sub="Total acquisition cost" />
-        <StatTile label="Predicted resale value" value={eurC(INV_STATS.predictedValue)} accent="copper" icon={<TrendingUp className="h-4 w-4" />} sub={`+${eurC(INV_STATS.predictedValue - INV_STATS.bookValue)} uplift`} />
-        <StatTile label="Aging (40d+)" value={INV_STATS.agingUnits} accent="risk" icon={<Clock className="h-4 w-4" />} sub="Flagged by Anvil for action" />
+        <StatTile label="Machines available" value={num(INV_STATS.units)} accent="ink" icon={<Boxes className="h-4 w-4" />} sub={`${INV_STATS.locations} locations · ${INV_STATS.countries} countries`} />
+        <StatTile label="Omnia stock" value={num(INV_STATS.ownedUnits)} accent="steel" icon={<Warehouse className="h-4 w-4" />} sub={`${eurC(INV_STATS.bookValue)} book value`} />
+        <StatTile label="Listed for vendors" value={num(INV_STATS.brokeredUnits)} accent="copper" icon={<Handshake className="h-4 w-4" />} sub={`${eurC(INV_STATS.commissionPipeline)} commission pipeline`} />
+        <StatTile label="Aging (90d+)" value={num(INV_STATS.agingUnits)} accent="risk" icon={<Clock className="h-4 w-4" />} sub="Flagged by Anvil for action" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
@@ -55,7 +110,7 @@ export function Inventory() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-faint" />
                 <input
                   value={q} onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search make, model, ID, yard…"
+                  placeholder="Search make, model, ID, city, vendor…"
                   className="w-full rounded-lg border border-line bg-canvas/60 py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-anvil/50 focus:bg-surface"
                 />
               </div>
@@ -67,6 +122,51 @@ export function Inventory() {
                 ))}
               </div>
             </div>
+
+            {/* Ownership, origin and sort — the facets that matter once the book is this big */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1">
+                {(['All', 'owned', 'brokered'] as const).map((o) => (
+                  <button key={o} onClick={() => setOwn(o)} className={cn('rounded-md px-2.5 py-1.5 text-[11.5px] font-600 transition', own === o ? 'bg-ink text-white' : 'bg-canvas text-ink-soft hover:bg-mist')}>
+                    {o === 'All' ? 'All machines' : OWNERSHIP_LABEL[o as Ownership]}
+                  </button>
+                ))}
+              </div>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="rounded-md border border-line bg-canvas/60 px-2 py-1.5 text-[11.5px] font-600 text-ink-soft outline-none transition focus:border-anvil/50"
+              >
+                <option value="All">All countries</option>
+                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className="rounded-md border border-line bg-canvas/60 px-2 py-1.5 text-[11.5px] font-600 text-ink-soft outline-none transition focus:border-anvil/50"
+              >
+                {SORTS.map((x) => <option key={x.id} value={x.id}>Sort: {x.label}</option>)}
+              </select>
+              {filtered && (
+                <button onClick={resetFilters} className="rounded-md px-2 py-1.5 text-[11.5px] font-600 text-anvil-deep underline-offset-2 hover:underline">
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Saved views — the questions the desk asks repeatedly */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10.5px] font-600 uppercase tracking-wide text-ink-faint">Views</span>
+              {VIEWS.map((v) => (
+                <button
+                  key={v.label}
+                  onClick={() => setView(view === v.label ? null : v.label)}
+                  className={cn('rounded-full border px-2.5 py-1 text-[11.5px] font-550 transition', view === v.label ? 'border-anvil/50 bg-anvil-tint text-anvil-deep' : 'border-line bg-surface text-ink-soft hover:border-ink/20')}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
             <div className="flex flex-wrap items-center gap-1.5">
               {(['All', ...CATEGORIES] as const).map((c) => (
                 <button key={c} onClick={() => setCat(c as Category | 'All')} className={cn('rounded-full border px-2.5 py-1 text-[11.5px] font-550 transition', cat === c ? 'border-copper/50 bg-copper-wash text-copper-deep' : 'border-line bg-surface text-ink-soft hover:border-ink/20')}>
@@ -76,49 +176,70 @@ export function Inventory() {
             </div>
           </div>
 
-          <div className="max-h-[560px] overflow-y-auto">
-            <table className="w-full text-left">
-              <thead className="sticky top-0 z-10 bg-surface/95 backdrop-blur">
-                <tr className="border-b border-line text-[10.5px] font-600 uppercase tracking-wide text-ink-faint">
-                  <th className="py-2.5 pl-4 pr-2">Machine</th>
-                  <th className="px-2">Insp.</th>
-                  <th className="px-2 text-right">Acquired</th>
-                  <th className="px-2 text-right">Pred. resale</th>
-                  <th className="px-2 text-right">Margin</th>
-                  <th className="py-2.5 pl-2 pr-4">Best market</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((m) => (
-                  <tr
-                    key={m.id}
-                    onClick={() => setSelId(m.id)}
-                    className={cn('cursor-pointer border-b border-line/70 text-[12.5px] transition hover:bg-canvas/60', m.id === selId && 'bg-copper-wash/60')}
-                  >
-                    <td className="py-2.5 pl-4 pr-2">
-                      <div className="flex items-center gap-2.5">
+          {/* Column header — a grid, not a table, so rows can be virtualized */}
+          <div className="grid grid-cols-[minmax(0,1fr)_54px_92px_104px_66px_128px] items-center gap-2 border-b border-line bg-surface/95 px-4 py-2.5 text-[10.5px] font-600 uppercase tracking-wide text-ink-faint">
+            <span>Machine</span>
+            <span className="text-center">Insp.</span>
+            <span className="text-right">Cost / comm.</span>
+            <span className="text-right">Pred. resale</span>
+            <span className="text-right">To Omnia</span>
+            <span>Location</span>
+          </div>
+
+          <div ref={scrollRef} className="h-[560px] overflow-y-auto">
+            {rows.length === 0 ? (
+              <div className="py-10 text-center text-[13px] text-ink-faint">No machines match those filters.</div>
+            ) : (
+              <div style={{ height: virt.getTotalSize(), position: 'relative', width: '100%' }}>
+                {virt.getVirtualItems().map((v) => {
+                  const m = rows[v.index]
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => setSelId(m.id)}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: v.size, transform: `translateY(${v.start}px)` }}
+                      className={cn(
+                        'grid cursor-pointer grid-cols-[minmax(0,1fr)_54px_92px_104px_66px_128px] items-center gap-2 border-b border-line/70 px-4 text-[12.5px] transition hover:bg-canvas/60',
+                        m.id === selId && 'bg-copper-wash/60',
+                      )}
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-canvas text-ink-soft"><MachineGlyph category={m.category} size={17} /></div>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 font-600 text-ink">{m.make} {m.model} <span className={cn('h-1.5 w-1.5 rounded-full', m.tier === 'hot' ? 'bg-copper' : m.tier === 'warm' ? 'bg-risk' : 'bg-steel')} /></div>
-                          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-faint"><Plate tone={m.id === selId ? "live" : "default"}>{m.id}</Plate><span className="readout">{m.year} · {num(m.hours)} h</span></div>
+                          <div className="flex items-center gap-1.5 truncate font-600 text-ink">
+                            {m.make} {m.model}
+                            <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', m.tier === 'hot' ? 'bg-copper' : m.tier === 'warm' ? 'bg-risk' : 'bg-steel')} />
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-faint">
+                            <Plate tone={m.id === selId ? 'live' : 'default'}>{m.id}</Plate>
+                            <span className="readout truncate">{m.year} · {num(m.hours)} h</span>
+                          </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-2"><span className={cn('inline-flex h-6 min-w-[26px] items-center justify-center rounded-md px-1 text-[11px] font-700 tabular', m.inspection >= 90 ? 'bg-ok-tint text-ok-deep' : m.inspection >= 82 ? 'bg-anvil-tint text-anvil-deep' : 'bg-risk-tint text-risk-deep')}>{m.inspection}</span></td>
-                    <td className="px-2 text-right tabular text-ink-soft">{eur(m.acqCost)}</td>
-                    <td className="px-2 text-right tabular font-600 text-copper-deep">{eur(m.predResale)}</td>
-                    <td className="px-2 text-right"><span className="tabular font-700 text-ink">{pct(marginPct(m))}</span></td>
-                    <td className="py-2.5 pl-2 pr-4 text-[11.5px] text-ink-soft">{m.predRegion}</td>
-                  </tr>
-                ))}
-                {rows.length === 0 && (
-                  <tr><td colSpan={6} className="py-10 text-center text-[13px] text-ink-faint">No machines match those filters.</td></tr>
-                )}
-              </tbody>
-            </table>
+                      <div className="text-center">
+                        <span className={cn('inline-flex h-6 min-w-[26px] items-center justify-center rounded-md px-1 text-[11px] font-700 tabular', m.inspection >= 90 ? 'bg-ok-tint text-ok-deep' : m.inspection >= 82 ? 'bg-anvil-tint text-anvil-deep' : 'bg-risk-tint text-risk-deep')}>{m.inspection}</span>
+                      </div>
+                      <span className="truncate text-right tabular text-ink-soft">{costValue(m)}</span>
+                      <span className="truncate text-right tabular font-600 text-copper-deep">{eur(m.predResale)}</span>
+                      <div className="text-right">
+                        <div className="tabular font-700 text-ink">{eurC(margin(m))}</div>
+                        <div className="tabular text-[10.5px] text-ink-faint">{m.ownership === 'owned' ? `${marginPct(m).toFixed(0)}% mgn` : `${marginPct(m).toFixed(1)}% comm`}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[11.5px] text-ink-soft">{m.location.flag} {m.location.city}</div>
+                        <div className="truncate text-[10.5px] text-ink-faint">{m.ownership === 'owned' ? 'Omnia stock' : m.vendor}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-[11.5px] text-ink-faint">
-            <span>{rows.length} of {MACHINES.length} units</span>
+            <span>
+              <span className="tabular font-700 text-ink">{num(rows.length)}</span>
+              {filtered ? ` of ${num(MACHINES.length)} machines` : ' machines'}
+            </span>
             <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-copper" /> hot <span className="h-1.5 w-1.5 rounded-full bg-risk" /> warm <span className="h-1.5 w-1.5 rounded-full bg-steel" /> cool</span>
           </div>
         </Card>
@@ -173,19 +294,19 @@ function MachineDetail({ machine: m, onAct, onSendPack }: { machine: Machine; on
       <div className="mt-4 grid grid-cols-2 gap-3 text-[12.5px]">
         <Spec icon={<Calendar className="h-3.5 w-3.5" />} label="Year" value={String(m.year)} />
         <Spec icon={<Gauge className="h-3.5 w-3.5" />} label="Hours" value={`${num(m.hours)} h`} />
-        <Spec icon={<MapPin className="h-3.5 w-3.5" />} label="Yard" value={`${m.yard} (${m.yardRegion})`} />
-        <Spec icon={<Clock className="h-3.5 w-3.5" />} label="Days in yard" value={`${m.daysInYard}d`} />
+        <Spec icon={<MapPin className="h-3.5 w-3.5" />} label={m.ownership === 'owned' ? 'Yard' : 'Vendor site'} value={`${m.location.city}, ${m.location.country}`} />
+        <Spec icon={<Clock className="h-3.5 w-3.5" />} label="Days listed" value={`${m.daysListed}d`} />
       </div>
 
       <div className="mt-4 rounded-xl border border-line bg-gradient-to-b from-canvas/50 to-surface p-3.5">
         <div className="mb-2 flex items-center gap-1.5 text-[11px] font-600 uppercase tracking-wide text-anvil-deep"><AIBadge /> resale forecast</div>
         <div className="space-y-2">
-          <Row label="Acquisition cost" value={eur(m.acqCost)} />
-          <Row label="Current asking" value={eur(m.listPrice)} />
+          <Row label={costLabel(m)} value={costValue(m)} />
+          <Row label="Current asking" value={eur(m.askPrice)} />
           <Row label="Predicted resale" value={eur(m.predResale)} strong />
           <div className="my-1 h-px bg-line" />
           <div className="flex items-center justify-between">
-            <span className="text-[12px] font-600 text-copper-deep">Predicted margin</span>
+            <span className="text-[12px] font-600 text-copper-deep">{earnLabel(m)}</span>
             <span className="font-display text-[16px] font-700 tabular text-copper-deep">{eur(mgn)} · {pct(marginPct(m))}</span>
           </div>
           <Meter value={Math.min(100, marginPct(m))} tone="copper" />

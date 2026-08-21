@@ -287,7 +287,7 @@ function ThreadDetail({
                 {machine.make} {machine.model}
               </div>
               <div className="text-[11.5px] text-ink-faint">
-                <Plate>{machine.id}</Plate> <span className="readout">{machine.year} · {hrs(machine.hours)}</span> · {machine.yard}
+                <Plate>{machine.id}</Plate> <span className="readout">{machine.year} · {hrs(machine.hours)}</span> · {machine.location.city}
               </div>
             </div>
             <div className="shrink-0 text-right">
