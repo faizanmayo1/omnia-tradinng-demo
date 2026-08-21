@@ -24,7 +24,7 @@ export function Demand() {
         <StatTile label="Active markets" value={REGIONS.length} accent="anvil" icon={<Globe2 className="h-4 w-4" />} sub="4 continents live" />
         <StatTile label="Buyer inquiries (30d)" value={num(totalInq)} accent="copper" icon={<Inbox className="h-4 w-4" />} sub="Across all corridors" />
         <StatTile label="Hottest market" value={REGIONS[0].hub} accent="copper" icon={<Flame className="h-4 w-4" />} sub={`Index ${REGIONS[0].index} · ${pctDelta(REGIONS[0].trend)}`} />
-        <StatTile label="Excavator demand" value="93" accent="ok" icon={<TrendingUp className="h-4 w-4" />} sub="+7 index MoM · leads all" />
+        <StatTile label="Crusher demand" value="93" accent="ok" icon={<TrendingUp className="h-4 w-4" />} sub="+7 index MoM · leads all" />
       </div>
 
       {/* Map + region detail */}
@@ -83,10 +83,10 @@ export function Demand() {
                 <YAxis domain={[55, 100]} tick={{ fontSize: 11, fill: '#70767F' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #DDE1E4', fontSize: 12, boxShadow: '0 8px 24px -14px rgba(28,31,36,0.3)' }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="plainline" />
-                <Line type="monotone" dataKey="Excavator" stroke="#B4622E" strokeWidth={2.4} dot={false} />
-                <Line type="monotone" dataKey="Dozer" stroke="#0E8C8C" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Crusher" stroke="#B4622E" strokeWidth={2.4} dot={false} />
+                <Line type="monotone" dataKey="Screener" stroke="#0E8C8C" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="Crane" stroke="#5C6B7A" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Loader" stroke="#C99A3E" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Roller" stroke="#C99A3E" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
