@@ -28,9 +28,10 @@ pnpm-debug.log*
 *.sw?
 
 # Env
+.env
+.env.*
 !.env.example
 
 # Vite / cache
 .vite
 *.tsbuildinfo
-config.bat
